@@ -30,6 +30,33 @@
         "claude-code"
       ],
       "category": "productivity"
+    },
+    {
+      "name": "mindfulness-mentor",
+      "source": {
+        "source": "github",
+        "repo": "Goodsmileduck/goodsmileduck-claude-registry"
+      },
+      "description": "Guides developers through mindfulness exercises and stress-reduction techniques. Use when taking a break, feeling overwhelmed, debugging frustration, or needing to refocus during a coding session.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Stanislav Serebrennikov",
+        "url": "https://github.com/Goodsmileduck"
+      },
+      "homepage": "https://github.com/Goodsmileduck/goodsmileduck-claude-registry",
+      "repository": "https://github.com/Goodsmileduck/goodsmileduck-claude-registry",
+      "license": "MIT",
+      "keywords": [
+        "mindfulness",
+        "stress-reduction",
+        "wellness",
+        "developer-wellness",
+        "breaks",
+        "meditation",
+        "focus",
+        "productivity"
+      ],
+      "category": "wellness"
     }
   ]
 }
