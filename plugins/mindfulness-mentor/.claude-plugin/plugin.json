@@ -1,0 +1,22 @@
+{
+  "name": "mindfulness-mentor",
+  "version": "1.0.0",
+  "description": "Guides developers through mindfulness exercises and stress-reduction techniques during coding sessions. Based on Anthropic's Mindfulness Mentor prompt.",
+  "author": {
+    "name": "Goodsmileduck",
+    "url": "https://github.com/Goodsmileduck"
+  },
+  "homepage": "https://github.com/Goodsmileduck/goodsmileduck-claude-registry",
+  "repository": "https://github.com/Goodsmileduck/goodsmileduck-claude-registry",
+  "license": "MIT",
+  "keywords": [
+    "mindfulness",
+    "stress-reduction",
+    "wellness",
+    "developer-wellness",
+    "breaks",
+    "meditation",
+    "focus",
+    "productivity"
+  ]
+}
