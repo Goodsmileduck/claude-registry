@@ -19,6 +19,7 @@ Discover, install, and share plugins that enhance your Claude Code experience. F
 - [Quick Start](#quick-start)
 - [Available Plugins](#available-plugins)
   - [claude-md-optimizer](#claude-md-optimizer)
+  - [do-registry-cleanup](#do-registry-cleanup)
 - [Installation](#installation)
 - [Repository Structure](#repository-structure)
 - [Contributing](#contributing)
@@ -72,6 +73,25 @@ Analyzes and optimizes CLAUDE.md files following Anthropic's official best pract
 /claude-md-optimizer
 ```
 
+### do-registry-cleanup
+
+Analyze and clean DigitalOcean Container Registry images. Requires `doctl` CLI.
+
+| Feature | Description |
+|---------|-------------|
+| **Analyze** | List all repos with tag counts, dates, and latest tags |
+| **Clean** | Delete old tags, keep newest N per repo |
+| **Dry Run** | Preview what would be deleted before executing |
+| **Stale** | Find repos not updated in N months |
+| **GC** | Trigger garbage collection to reclaim storage |
+
+**Install:**
+```bash
+/plugin install do-registry-cleanup@claude-registry
+```
+
+**Triggers:** "clean registry", "delete old images", "DO registry", "registry cleanup"
+
 ---
 
 ## Installation
@@ -112,14 +132,22 @@ claude-registry/
 │   ├── plugin.json           # Root plugin manifest
 │   └── marketplace.json      # Marketplace definition
 └── plugins/
-    └── claude-md-optimizer/  # CLAUDE.md optimization plugin
+    ├── claude-md-optimizer/  # CLAUDE.md optimization plugin
+    │   ├── .claude-plugin/
+    │   │   └── plugin.json
+    │   └── skills/
+    │       └── claude-md-optimizer/
+    │           ├── SKILL.md
+    │           └── references/
+    │               └── best-practices.md
+    └── do-registry-cleanup/  # DO Container Registry cleanup
         ├── .claude-plugin/
         │   └── plugin.json
         └── skills/
-            └── claude-md-optimizer/
+            └── do-registry-cleanup/
                 ├── SKILL.md
-                └── references/
-                    └── best-practices.md
+                └── scripts/
+                    └── registry_cleanup.py
 ```
 
 ---

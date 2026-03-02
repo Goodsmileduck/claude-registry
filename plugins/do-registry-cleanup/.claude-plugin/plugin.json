@@ -1,0 +1,21 @@
+{
+  "name": "do-registry-cleanup",
+  "version": "1.0.0",
+  "description": "Analyze and clean DigitalOcean Container Registry images. Lists repos with tag counts, deletes old tags (keep last N), finds stale repos, triggers garbage collection. Supports dry-run mode.",
+  "author": {
+    "name": "Stanislav Serebrennikov",
+    "url": "https://github.com/Goodsmileduck"
+  },
+  "homepage": "https://github.com/Goodsmileduck/goodsmileduck-claude-registry",
+  "repository": "https://github.com/Goodsmileduck/goodsmileduck-claude-registry",
+  "license": "MIT",
+  "keywords": [
+    "digitalocean",
+    "docker",
+    "container-registry",
+    "cleanup",
+    "devops",
+    "infrastructure",
+    "doctl"
+  ]
+}

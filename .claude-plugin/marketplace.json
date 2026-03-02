@@ -57,6 +57,32 @@
         "productivity"
       ],
       "category": "wellness"
+    },
+    {
+      "name": "do-registry-cleanup",
+      "source": {
+        "source": "github",
+        "repo": "Goodsmileduck/goodsmileduck-claude-registry"
+      },
+      "description": "Analyze and clean DigitalOcean Container Registry images. Lists repos with tag counts, deletes old tags (keep last N), finds stale repos, triggers garbage collection. Supports dry-run mode.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Stanislav Serebrennikov",
+        "url": "https://github.com/Goodsmileduck"
+      },
+      "homepage": "https://github.com/Goodsmileduck/goodsmileduck-claude-registry",
+      "repository": "https://github.com/Goodsmileduck/goodsmileduck-claude-registry",
+      "license": "MIT",
+      "keywords": [
+        "digitalocean",
+        "docker",
+        "container-registry",
+        "cleanup",
+        "devops",
+        "infrastructure",
+        "doctl"
+      ],
+      "category": "devops"
     }
   ]
 }
