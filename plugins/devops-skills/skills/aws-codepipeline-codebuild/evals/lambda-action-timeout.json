@@ -1,0 +1,16 @@
+{
+  "name": "codepipeline-lambda-action-hangs",
+  "query": "Our CodePipeline 'Deploy' stage has a Lambda invoke action that hangs for the full 30 minutes before timing out. CloudWatch shows the Lambda invocation completed in 28 seconds with a successful return. Pipeline still shows the action as in-progress. What's the pattern we're missing?",
+  "files": {
+    "lambda_handler.py": "import json\nimport boto3\n\ndef lambda_handler(event, context):\n    user_params = json.loads(event['CodePipeline.job']['data']['actionConfiguration']['configuration']['UserParameters'])\n    deploy_target(user_params['target'])\n    return {'statusCode': 200, 'body': 'deployed'}\n"
+  },
+  "expected_behavior": [
+    "Identifies the cause directly: the CodePipeline Lambda invoke action is asynchronous from CodePipeline's perspective. The Lambda function MUST call `codepipeline.put_job_success_result(jobId=...)` (or `put_job_failure_result`) before returning. Returning a value does NOT signal completion to CodePipeline; the pipeline waits until either a result is posted or the action times out (default 1 hour, max configurable).",
+    "Names that `event['CodePipeline.job']['id']` is the `jobId` to pass back.",
+    "Gives the corrected handler shape: extract `job_id`, do the work in a try/except, call `put_job_success_result(jobId=job_id)` on success and `put_job_failure_result(jobId=job_id, failureDetails={'type': 'JobFailed', 'message': str(e)})` on failure.",
+    "Names two IAM requirements: (1) Lambda execution role needs `codepipeline:PutJobSuccessResult` + `codepipeline:PutJobFailureResult` (resource `*` because the JobId is opaque); (2) pipeline service role needs `lambda:InvokeFunction` on the function.",
+    "Mentions the long-running pattern: for work that exceeds Lambda's 15-minute max, return without posting result, store `jobId` in DynamoDB/Step Functions, have a separate trigger call PutJobSuccessResult later — this is the 'continuation token' pattern.",
+    "Does NOT recommend reducing the timeout as the fix.",
+    "Does NOT recommend switching to a CodeBuild action unless the work specifically suits a build environment."
+  ]
+}

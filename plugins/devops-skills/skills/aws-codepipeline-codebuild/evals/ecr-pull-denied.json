@@ -1,0 +1,15 @@
+{
+  "name": "codebuild-ecr-pull-denied",
+  "query": "Our CodeBuild project fails immediately with `CLIENT_ERROR: Unable to pull customer's container image. CannotPullContainerError: pull access denied for 1234.dkr.ecr.us-east-1.amazonaws.com/builder:latest`. The image exists; from my workstation `aws ecr get-login-password | docker login ...` + `docker pull` works under the same AWS profile. What's wrong?",
+  "files": {
+    "codebuild-project.json": "{\n  \"name\": \"app-build\",\n  \"source\": { \"type\": \"CODEPIPELINE\" },\n  \"artifacts\": { \"type\": \"CODEPIPELINE\" },\n  \"environment\": {\n    \"type\": \"LINUX_CONTAINER\",\n    \"image\": \"1234.dkr.ecr.us-east-1.amazonaws.com/builder:latest\",\n    \"imagePullCredentialsType\": \"CODEBUILD\",\n    \"computeType\": \"BUILD_GENERAL1_SMALL\"\n  },\n  \"serviceRole\": \"arn:aws:iam::1234:role/codebuild-app-build-service-role\"\n}\n"
+  },
+  "expected_behavior": [
+    "Identifies the root cause: CodeBuild pulls the image as its own principal, not as the user who created the project. Two distinct paths exist via `imagePullCredentialsType`: (1) `CODEBUILD` (default) — CodeBuild's own service principal pulls; you must grant access via an ECR repository policy that trusts `codebuild.amazonaws.com`. (2) `SERVICE_ROLE` — pulls under the project's service role; the service role needs `ecr:GetAuthorizationToken`, `ecr:BatchGetImage`, `ecr:GetDownloadUrlForLayer` on the repo, plus an ECR repo policy permitting the role ARN.",
+    "Diagnoses the project config above: `imagePullCredentialsType: CODEBUILD` is set but no ECR repo policy is in place for `codebuild.amazonaws.com`. That's the gap.",
+    "Gives both fixes. Fix A (recommended for private images): switch to `imagePullCredentialsType: SERVICE_ROLE` and attach the three ECR actions above to the service role + add an ECR repo policy. Fix B: keep CODEBUILD mode and add an ECR repo policy with `Principal: { Service: codebuild.amazonaws.com }`.",
+    "Notes that the workstation succeeds because it pulls under your IAM identity, which is a different principal from CodeBuild's. The 'same AWS profile' detail is a red herring.",
+    "Does NOT suggest making the ECR repo public.",
+    "Does NOT suggest switching to a Docker Hub base image as the fix."
+  ]
+}

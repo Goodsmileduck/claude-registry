@@ -1,0 +1,14 @@
+{
+  "name": "proxied-smtp-mail-broken",
+  "query": "Our mail server stopped receiving mail after I switched the A record for mail.example.com to proxied (orange cloud) to get TLS and DDoS protection. MX record still points at mail.example.com. dig shows the record resolves to Cloudflare IPs. Why is mail broken?",
+  "files": {},
+  "expected_behavior": [
+    "Identifies the cause directly: Cloudflare's proxy terminates only HTTP/HTTPS (and a few protocols via Spectrum on Enterprise plans). SMTP (ports 25/465/587), IMAP (143/993), POP3 (110/995) traffic to a proxied hostname is dropped at the edge — it never reaches the origin.",
+    "Names the rule: proxy only HTTP-serving hostnames. Mail hostnames must be DNS-only (grey cloud).",
+    "Gives the fix: set the A record for `mail.example.com` back to `proxied: false` via `PATCH /zones/{zone_id}/dns_records/{record_id}` with `{\"proxied\": false}`.",
+    "Mentions why this is silent: MX validation only checks that the target hostname resolves; it doesn't verify port 25 reachability. There's no Cloudflare warning when you proxy an MX target.",
+    "Adds the broader pattern: if you want TLS + DDoS for mail, use the mail server's own TLS termination, not Cloudflare's proxy. For DDoS protection on non-HTTP services, Cloudflare Spectrum is the (paid) option — but DNS-only A record is the default fix.",
+    "Does NOT suggest disabling Universal SSL or changing the MX record as the fix.",
+    "Does NOT suggest Spectrum as the recommendation unless explicitly asked about enterprise/paid options."
+  ]
+}

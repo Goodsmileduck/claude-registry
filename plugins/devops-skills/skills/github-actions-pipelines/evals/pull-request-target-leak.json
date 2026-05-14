@@ -1,0 +1,15 @@
+{
+  "name": "pull-request-target-secret-leak",
+  "query": "We need our integration tests to run on PRs from forks with access to our API_KEY secret. We switched the trigger to `pull_request_target` and it works. Is this safe?",
+  "files": {
+    ".github/workflows/integration.yml": "name: integration\non:\n  pull_request_target:\n    branches: [main]\njobs:\n  test:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n        with:\n          ref: ${{ github.event.pull_request.head.sha }}\n      - run: npm ci\n      - run: npm test\n        env:\n          API_KEY: ${{ secrets.API_KEY }}\n"
+  },
+  "expected_behavior": [
+    "Flags this as a critical security vulnerability — not safe.",
+    "Explains the mechanism: `pull_request_target` runs in the context of the BASE repo with full secret access, but the workflow checks out the fork's HEAD commit and runs `npm install` + `npm test` from it. An attacker opens a PR that modifies `package.json` postinstall or a test file to exfiltrate `API_KEY`.",
+    "Cites the rule: `pull_request_target` MUST NOT check out and execute untrusted code from the PR head. Use it only for label/comment automation or running BASE-repo code that reads PR metadata.",
+    "Gives the safe pattern: keep integration tests on `pull_request` (no secrets passed from forks), and gate access via a manual approval — either a maintainer label that triggers a separate workflow_run, or GitHub's 'Require approval for first-time contributors' setting under Actions → General. For a fully sandboxed path: deployment environment with required reviewers.",
+    "Does NOT suggest 'just be careful what scripts run' as a fix.",
+    "Does NOT suggest pinning the PR sha (the attacker controls the sha)."
+  ]
+}

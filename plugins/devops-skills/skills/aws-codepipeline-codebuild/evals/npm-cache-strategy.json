@@ -1,0 +1,16 @@
+{
+  "name": "codebuild-npm-cache-not-helping",
+  "query": "Our CodeBuild project takes 8 minutes per build. About 4 minutes is `npm ci` installing ~1500 deps. We configured an S3 cache and `cache.paths: ['node_modules/**/*']` in the buildspec but builds aren't getting faster. What's wrong with the cache strategy?",
+  "files": {
+    "buildspec.yml": "version: 0.2\n\nphases:\n  install:\n    runtime-versions:\n      nodejs: 20\n    commands:\n      - npm ci\n  build:\n    commands:\n      - npm run build\n\nartifacts:\n  files:\n    - 'dist/**/*'\n  base-directory: .\n\ncache:\n  paths:\n    - 'node_modules/**/*'\n"
+  },
+  "expected_behavior": [
+    "Identifies the core problem: S3 cache restoration of `node_modules` (~1500 dirs, tens of thousands of small files) is slow because S3 transfers each path serially. For deeply nested small-file trees, S3 cache restore can take longer than re-running `npm ci`.",
+    "Recommends two better strategies. (A) Cache the npm download cache, not `node_modules`: set `cache.paths: ['/root/.npm/**/*']` (or `$HOME/.npm/**/*`) so `npm ci` does a clean install but pulls tarballs from cache instead of the registry — faster install, no node_modules corruption risk. (B) Switch to LOCAL cache with `LOCAL_CUSTOM_CACHE` mode in the project config (NOT buildspec): kept on the build host between runs, near-instant restore when the host is warm — best-effort, not guaranteed.",
+    "Names a third option for monorepos/Docker-based builds: enable `privileged: true` + `LOCAL_DOCKER_LAYER_CACHE` so Docker layer cache is reused. Useful when the build is `docker build`-based.",
+    "Notes that cache settings live partially in the project (cache.type + cache.location + cache.modes) and partially in the buildspec (cache.paths). LOCAL_CUSTOM_CACHE requires both: `cache.type: LOCAL` + `cache.modes: [LOCAL_CUSTOM_CACHE]` at the project level, AND `cache.paths` in the buildspec.",
+    "For VPC builds, mentions that S3 traffic should go over a VPC endpoint to avoid NAT egress charges and latency.",
+    "Does NOT recommend bumping compute type from SMALL to MEDIUM as the primary fix — that's a cost regression that doesn't address the cache miss.",
+    "Does NOT recommend disabling caching entirely."
+  ]
+}

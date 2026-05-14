@@ -1,0 +1,16 @@
+{
+  "name": "inputs-deep-merge-not-replace",
+  "query": "We have `_envcommon/db.hcl` with `inputs = { tags = { team = \"platform\", env = \"prod\" } }`. In `envs/stg/db/terragrunt.hcl` we include it and set `inputs = { tags = { env = \"stg\" } }`, expecting the stg unit to have only `{ env = \"stg\" }`. Plan shows `{ team = \"platform\", env = \"stg\" }`. Where's the team tag coming from and how do we override the entire map?",
+  "files": {
+    "_envcommon/db.hcl": "inputs = {\n  tags = {\n    team = \"platform\"\n    env  = \"prod\"\n  }\n}\n",
+    "envs/stg/db/terragrunt.hcl": "include \"common\" {\n  path = find_in_parent_folders(\"_envcommon/db.hcl\")\n}\n\ninputs = {\n  tags = {\n    env = \"stg\"\n  }\n}\n"
+  },
+  "expected_behavior": [
+    "Explains the actual semantics: `inputs` is deep-merged across include + child. Scalars: child wins at the leaf. Nested maps: recursively merged, not replaced. So `tags.team` survives because the child never mentions it.",
+    "Names that the same rule applies to `mock_outputs`; whereas `remote_state` is shallow (child block overrides parent block entirely).",
+    "Gives two correct overrides: (a) restate every key in the child map so the merge produces the desired final state; (b) set `merge_strategy = \"no_merge\"` on the `include` block to skip merging the parent into the child entirely (loses everything inherited, not just the map).",
+    "Mentions the third option only if it fits: pre-compute tags in a `locals { }` block in the child and write `tags = local.tags` (sidesteps the deep-merge interaction).",
+    "Does NOT suggest setting parent keys to `null` in the child as a deletion mechanism — that does not delete in HCL deep-merge.",
+    "Does NOT recommend removing the include."
+  ]
+}

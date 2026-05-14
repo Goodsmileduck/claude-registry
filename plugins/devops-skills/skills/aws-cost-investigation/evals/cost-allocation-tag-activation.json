@@ -1,0 +1,16 @@
+{
+  "name": "tag-activation-trap",
+  "query": "We tagged everything with `team=<name>` six months ago via Terraform — every EC2, RDS, S3 bucket has the tag, verified. Cost Explorer reports still show ~80% of costs under `(no tag)` for the team dimension. What's broken?",
+  "files": {},
+  "expected_behavior": [
+    "Identifies the activation trap immediately: a tag must be activated as a Cost Allocation Tag in the Billing console (or via Organizations management account) before it appears in Cost Explorer or CUR. Adding the tag to resources doesn't auto-activate it.",
+    "Gives the exact path: Billing console → Cost Allocation Tags → User-Defined Cost Allocation Tags → select `team` → Activate. Or via API: `aws ce update-cost-allocation-tags-status --cost-allocation-tags-status TagKey=team,Status=Active`.",
+    "Names the critical retroactivity rule: activation applies FORWARD only. Costs incurred BEFORE the activation date are not retroactively tagged in CUR. The historical view will continue to show `(no tag)` for pre-activation costs.",
+    "Mentions the 24-48 hour delay between activation and first appearance in Cost Explorer / CUR.",
+    "Diagnoses the residual `(no tag)` after activation: some resources don't propagate tags to billing automatically — `AWS support`, untagged data transfer, marketplace charges, certain AWS-managed resources (e.g., default VPC NAT gateway, AWS-managed KMS keys). These will always show as `(no tag)`.",
+    "Names AWS-generated tags (`aws:createdBy`, `aws:cloudformation:*`) as a separate activation flow if needed.",
+    "Suggests forward-going enforcement: AWS Config rule `required-tags`, or an SCP requiring tags on resource creation. NOT a one-time fix; a continuous control.",
+    "Does NOT suggest re-tagging resources to fix historical data — pre-activation data cannot be backfilled.",
+    "Does NOT suggest switching to a third-party cost tool as the fix; the issue is upstream of any tool."
+  ]
+}

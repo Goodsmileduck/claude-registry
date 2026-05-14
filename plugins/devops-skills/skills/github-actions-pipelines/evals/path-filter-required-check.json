@@ -1,0 +1,14 @@
+{
+  "name": "path-filter-blocks-required-check",
+  "query": "Our `lint` job is a required status check in branch protection. PRs that only touch docs hang forever because the lint job is skipped via `paths:`. The PR shows 'Expected — Waiting for status to be reported'. How do we fix this without removing the path filter or making lint always run the full job?",
+  "files": {
+    ".github/workflows/ci.yml": "name: ci\non:\n  pull_request:\n    paths:\n      - 'src/**'\n      - 'package.json'\n      - 'package-lock.json'\njobs:\n  lint:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - run: npm ci\n      - run: npm run lint\n"
+  },
+  "expected_behavior": [
+    "Explains the trap: a job skipped by a path filter never reports a status, and branch protection treats missing required checks as pending, not passed. Skipped != success.",
+    "Gives the canonical fix: remove the workflow-level `paths:` filter and instead add a top-level `paths-filter` job (e.g. dorny/paths-filter) or an `if:` guard on lint, plus a sibling no-op job with the same name that always reports success on doc-only PRs. The simplest form: split into two `on: pull_request` triggers — one always-on shim that posts the required check, one full lint that runs only when paths match.",
+    "Mentions the modern alternative: switch from classic branch protection's named required checks to GitHub repository rulesets, which can require checks only when they actually run.",
+    "Does NOT suggest removing the path filter and running lint on every PR (defeats the purpose).",
+    "Does NOT suggest using `continue-on-error` (that reports failure, not success)."
+  ]
+}

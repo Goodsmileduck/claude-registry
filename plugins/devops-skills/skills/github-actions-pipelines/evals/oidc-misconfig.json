@@ -1,0 +1,15 @@
+{
+  "name": "oidc-aws-assume-role-fails",
+  "query": "Our deploy workflow can't assume the AWS role — getting `Not authorized to perform: sts:AssumeRoleWithWebIdentity` even though the OIDC provider is registered in IAM and the role exists. What did we miss?",
+  "files": {
+    ".github/workflows/deploy.yml": "name: deploy\non:\n  push:\n    branches: [main]\njobs:\n  deploy:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - uses: aws-actions/configure-aws-credentials@v6\n        with:\n          role-to-assume: arn:aws:iam::123456789012:role/gh-deploy\n          aws-region: us-east-1\n      - run: aws sts get-caller-identity\n",
+    "iam/trust-policy.json": "{\n  \"Version\": \"2012-10-17\",\n  \"Statement\": [{\n    \"Effect\": \"Allow\",\n    \"Principal\": { \"Federated\": \"arn:aws:iam::123456789012:oidc-provider/token.actions.githubusercontent.com\" },\n    \"Action\": \"sts:AssumeRoleWithWebIdentity\",\n    \"Condition\": {\n      \"StringEquals\": {\n        \"token.actions.githubusercontent.com:aud\": \"sts.amazonaws.com\",\n        \"token.actions.githubusercontent.com:sub\": \"repo:acme/api:ref:refs/heads/production\"\n      }\n    }\n  }]\n}\n"
+  },
+  "expected_behavior": [
+    "Identifies two distinct problems before suggesting fixes.",
+    "Problem 1: workflow is missing `permissions: id-token: write` on the job (or workflow). Without it the OIDC token is never minted, so AWS returns AssumeRoleWithWebIdentity denied. Cites that GITHUB_TOKEN default permissions do NOT include id-token: write — it must be explicit.",
+    "Problem 2: the trust policy `sub` claim is `repo:acme/api:ref:refs/heads/production` but the workflow runs on `main`. The `sub` claim format must match the actual ref (`refs/heads/main`).",
+    "Does NOT suggest switching to static access keys.",
+    "Does NOT rewrite the entire workflow — surfaces only the two specific edits."
+  ]
+}

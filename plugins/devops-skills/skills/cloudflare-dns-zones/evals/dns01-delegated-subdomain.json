@@ -1,0 +1,15 @@
+{
+  "name": "dns01-delegated-subdomain-challenge-fails",
+  "query": "cert-manager Issuer with Cloudflare DNS-01 against `prod.example.com` keeps failing: `presenting challenge: NS lookup found no answer for _acme-challenge.prod.example.com`. The API token has `Zone:DNS:Edit` on `example.com`. Records I create manually via dashboard work fine. What's wrong?",
+  "files": {
+    "issuer.yaml": "apiVersion: cert-manager.io/v1\nkind: Issuer\nmetadata:\n  name: letsencrypt-prod\nspec:\n  acme:\n    server: https://acme-v02.api.letsencrypt.org/directory\n    email: ops@example.com\n    privateKeySecretRef:\n      name: letsencrypt-prod\n    solvers:\n      - dns01:\n          cloudflare:\n            apiTokenSecretRef:\n              name: cloudflare-api-token\n              key: api-token\n"
+  },
+  "expected_behavior": [
+    "Identifies two likely root causes and gives diagnostics for each. (1) Delegated subdomain: if `prod.example.com` is a separate Cloudflare zone (or NS-delegated to another provider), the token scoped to `example.com` cannot write `_acme-challenge.prod.example.com` in the `prod.example.com` zone. Diagnostic: `dig +trace prod.example.com NS` to see which zone is authoritative. (2) Propagation delay: cert-manager checks the record from public resolvers before Cloudflare has propagated globally; the message text 'NS lookup found no answer' is consistent with this.",
+    "For (1), the fix: re-create the token with `Zone:DNS:Edit` scoped to the actual subzone (`prod.example.com`). Do NOT use 'All Zones' as a shortcut — over-scoped tokens violate least-privilege and the SKILL.md explicitly forbids this.",
+    "For (2), gives the cert-manager `cnameStrategy: Follow` pattern — point `_acme-challenge.prod.example.com` to a CNAME in a zone the token CAN write (e.g., `_acme-challenge.prod.example.com CNAME _acme-challenge.delegated.example.com`), then write to the CNAME target instead. Useful when you can't scope the token to the subzone.",
+    "Concrete diagnostic command: `dig +trace _acme-challenge.prod.example.com TXT @1.1.1.1` after cert-manager presents — confirms whether the record exists in authoritative DNS.",
+    "Does NOT recommend the deprecated Global API Key as a workaround.",
+    "Does NOT suggest switching to HTTP-01 unless the user has constraints that DNS-01 specifically solves (wildcards, private/internal services)."
+  ]
+}

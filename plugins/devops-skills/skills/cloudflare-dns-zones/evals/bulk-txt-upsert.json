@@ -1,0 +1,16 @@
+{
+  "name": "bulk-txt-idempotent-upsert",
+  "query": "I need to add 20 TXT records (DKIM keys, one per selector) to example.com from a CSV with columns `selector,value`. What's the curl shape, and how do I make it idempotent so reruns don't duplicate records that already exist?",
+  "files": {
+    "dkim-keys.csv": "selector1,v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQ...\nselector2,v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQ...\n"
+  },
+  "expected_behavior": [
+    "Starts with the zone-ID lookup: `curl -sf -H \"Authorization: Bearer $CF_API_TOKEN\" 'https://api.cloudflare.com/client/v4/zones?name=example.com' | jq -r '.result[0].id'`.",
+    "Names two ways to do bulk writes: (a) the `POST /zones/{zone_id}/dns_records/batch` endpoint — a single JSON body with `patches`, `posts`, `puts`, `deletes` arrays; atomic across the batch; (b) per-record loop using `POST /zones/{zone_id}/dns_records`. Recommends the batch endpoint for 20 records.",
+    "For idempotency: lists existing records first via `GET /zones/{zone_id}/dns_records?type=TXT&name=<fqdn>`, then constructs a batch with `patches` for existing IDs and `posts` for new ones. The record name for DKIM is `<selector>._domainkey.example.com` — the full FQDN, not just the selector.",
+    "Cites the rate limit: 1200 requests per 5 minutes per token (default). At 20 records the batch endpoint is one call; a per-record loop is well under the limit but should still respect 429s with retry.",
+    "Notes that the TXT `content` field must be the unquoted value — the API handles wrapping. Long DKIM values (>255 bytes) are split into multiple chunks automatically.",
+    "Does NOT recommend deleting all records and re-creating from scratch.",
+    "Does NOT suggest the BIND `import` endpoint for 20 records — that's for full-zone migrations."
+  ]
+}

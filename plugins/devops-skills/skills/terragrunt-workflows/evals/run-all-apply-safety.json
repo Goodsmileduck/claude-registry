@@ -1,0 +1,14 @@
+{
+  "name": "run-all-apply-safety",
+  "query": "We have 42 units under envs/prod/. Can we just run `terragrunt run --all apply` from CI on every merge to main? That's how we'd do it in the old Terraform monorepo with a single root.",
+  "files": {},
+  "expected_behavior": [
+    "Says no — this violates the plan-then-apply rule from `terraform-workflows`. `run --all apply` sequences per-unit applies in dependency order; it does NOT produce a unified plan across all 42 units. Blast radius is invisible until each unit's apply starts.",
+    "Names the specific failure modes: (1) a destructive plan in unit #7 is invisible until applies #1–6 already committed; (2) `--ignore-dependency-errors` masks unit failures while continuing — usually wrong for apply; (3) partial-apply state can leave the stack inconsistent when a mid-pipeline unit fails.",
+    "Gives the safer pattern: `terragrunt run --all plan -out=tfplan` (per-unit plan files persist), aggregate the blast-radius summary across all units, human review, then either `terragrunt run --all apply` of the saved plans OR targeted per-unit applies for changed units.",
+    "Notes that read-only `--all` operations (`plan`, `output`, `validate`, `state list`) are safe to automate; mutations are not.",
+    "Mentions `--parallelism` for tuning concurrency and `--queue-include-dir` / `--queue-exclude-dir` for scoping which units run.",
+    "Does NOT suggest replacing Terragrunt with anything; the question is about safe orchestration, not tooling.",
+    "Does NOT suggest `-auto-approve` as part of any answer."
+  ]
+}

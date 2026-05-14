@@ -1,0 +1,15 @@
+{
+  "name": "bill-spike-7d-vs-7d-walk",
+  "query": "Our AWS bill jumped $1,400 over the last 7 days vs the prior 7 days. No deploys went out. Find the cause.",
+  "files": {},
+  "expected_behavior": [
+    "Runs the diagnostic flow in order, not by guessing. Step 1: compare the two 7-day windows with `aws ce get-cost-and-usage --time-period Start=<prior7> End=<latest7> --granularity DAILY --metrics UnblendedCost --group-by Type=DIMENSION,Key=SERVICE` for each window, then diff per-service. Identifies the top-growing service before going further.",
+    "Step 2: drills into that service by grouping the same query by `Type=DIMENSION,Key=USAGE_TYPE` filtered to that service. Names the usage-type taxonomy (DataTransfer-*, BoxUsage:*, NatGateway-Bytes, etc.) so the user knows what to read.",
+    "Step 3: if a tag axis would help (per-team or per-env), groups by `Type=TAG,Key=<tag>` — but only if cost-allocation tags are activated.",
+    "Step 4: for resource-level attribution, mentions `aws ce get-cost-and-usage-with-resources` is the right tool but requires opting in via Cost Explorer Settings + has daily granularity (except EC2 hourly). Notes it only goes back 14 days.",
+    "Runs `aws ce get-anomalies --date-interval StartDate=<start>,EndDate=<end>` in parallel as a sanity check — AWS's own anomaly detector may have already flagged the cause.",
+    "Names the stop-the-bleeding pattern: once the cause is identified, the immediate action depends on what — log retention, idle resource, accidental data transfer, blown-out auto-scaling. The skill points to the relevant section of the trap inventory.",
+    "Does NOT guess 'probably NAT' or 'probably S3' without running the data. The discipline is data-first.",
+    "Does NOT recommend month-to-date totals or month-over-month for a 7-day spike — wrong window."
+  ]
+}

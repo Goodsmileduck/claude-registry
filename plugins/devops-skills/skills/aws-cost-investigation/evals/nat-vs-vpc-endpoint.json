@@ -1,0 +1,15 @@
+{
+  "name": "nat-egress-to-s3-ecr-fix",
+  "query": "Our NAT Gateway charges are $280/month and growing. Most traffic from our private EKS nodes goes to S3 (image pulls, model weights) and ECR (container images). Is there a way to cut this?",
+  "files": {},
+  "expected_behavior": [
+    "Identifies the canonical fix: route the S3 and ECR traffic through VPC endpoints instead of NAT. Names the two endpoint types: Gateway endpoints (S3, DynamoDB) are FREE — no hourly charge, no per-GB charge. Interface endpoints (ECR `api.ecr` + `dkr.ecr`, CloudWatch Logs, Secrets Manager, SSM) have hourly per-endpoint-per-AZ charges plus a per-GB processing charge that is significantly less than NAT's per-GB processing.",
+    "Gives the comparative shape (without quoting specific dollar amounts that age): for high-volume egress, Gateway endpoint costs zero; Interface endpoint costs hourly + per-GB but the per-GB rate is roughly a quarter of NAT's; NAT costs hourly per AZ + per-GB. Crossover for Interface endpoints is usually a few tens of GB/month.",
+    "Setup for Gateway endpoint (S3 example): `aws ec2 create-vpc-endpoint --vpc-id <vpc> --service-name com.amazonaws.<region>.s3 --route-table-ids <rtb-list>`. Associates with route tables, not subnets. Traffic to S3 from any subnet using those route tables goes via the endpoint automatically.",
+    "Setup for Interface endpoint (ECR): two endpoints needed — `com.amazonaws.<region>.ecr.api` and `com.amazonaws.<region>.ecr.dkr`. Plus `com.amazonaws.<region>.s3` Gateway endpoint because ECR stores image layers in S3 (the Docker pull will hit S3 even with ECR endpoints set up). Must enable Private DNS Names so the standard ECR DNS names resolve to the endpoint.",
+    "For EKS specifically: pod-level DNS resolution via CoreDNS must be able to reach the endpoint. The EKS managed VPC CNI already supports this; no special config needed beyond the endpoints existing.",
+    "Names the auditing step: `aws cloudwatch get-metric-statistics --namespace AWS/NATGateway --metric-name BytesOutToDestination` over a week to confirm volume before committing to the endpoint setup. If volume is low (< few tens of GB/month), Interface endpoints' hourly costs may not pay off.",
+    "Does NOT recommend disabling private subnets or moving workloads to public subnets to skip NAT.",
+    "Does NOT suggest cross-region replication of S3 buckets to avoid egress — same-region S3 access from VPC is always free via Gateway endpoint."
+  ]
+}

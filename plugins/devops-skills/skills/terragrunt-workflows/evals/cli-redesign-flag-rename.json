@@ -1,0 +1,15 @@
+{
+  "name": "cli-redesign-flag-rename",
+  "query": "Our CI is failing on `terragrunt run-all plan --terragrunt-source-update --terragrunt-non-interactive` with a deprecation warning and now an error. It worked last quarter. What changed and what's the minimum fix?",
+  "files": {
+    ".github/workflows/infra.yml": "name: infra-plan\non: pull_request\nenv:\n  TERRAGRUNT_NON_INTERACTIVE: \"true\"\njobs:\n  plan:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - run: terragrunt run-all plan --terragrunt-source-update --terragrunt-non-interactive\n        working-directory: infra/envs/prod\n"
+  },
+  "expected_behavior": [
+    "Identifies the Terragrunt CLI redesign as the cause. Names three concrete changes: (1) `run-all <cmd>` is replaced by `run --all <cmd>`; (2) the `--terragrunt-` flag prefix is removed (`--terragrunt-source-update` → `--source-update`, `--terragrunt-non-interactive` → `--non-interactive`); (3) `TERRAGRUNT_*` environment variables are renamed to `TG_*` (e.g. `TG_NON_INTERACTIVE`).",
+    "Notes that bare commands like `terragrunt plan` no longer auto-forward to OpenTofu/Terraform by default — must use `terragrunt run plan` (matters once `default-command` strict control is enforced).",
+    "Gives the minimum fix as a corrected command: `terragrunt run --all plan --source-update --non-interactive`.",
+    "Mentions `TG_STRICT_MODE=true` or `TG_STRICT_CONTROL=cli-redesign` as the way to opt into errors locally so the migration can't regress.",
+    "Does NOT recommend pinning to an old Terragrunt version as the fix.",
+    "Does NOT rewrite the whole workflow — surfaces only the minimal renames."
+  ]
+}
