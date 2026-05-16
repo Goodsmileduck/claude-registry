@@ -233,10 +233,10 @@ GitHub enforces at most one running + one queued per group; further pushes overw
 
 ## Caching
 
-`actions/cache` — verify current major via Context7 (`/actions/cache`); cache scope semantics changed in v4. Key strategy:
+`actions/cache` — verify current major via Context7 (`/actions/cache`); cache scope semantics changed in v4 and are unchanged in v5 (current). Key strategy:
 
 ```yaml
-- uses: actions/cache@v4
+- uses: actions/cache@v5
   with:
     path: |
       ~/.npm

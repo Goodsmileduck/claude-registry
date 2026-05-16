@@ -54,13 +54,15 @@ Two pipeline types coexist. `pipelineType: V1` is the original; `V2` adds capabi
 
 | Provider | Use | Notes |
 |---|---|---|
-| **CodeStar Connections** (GitHub, Bitbucket, GitLab) | Default for third-party Git | GitHub App, modern. Action type: `CodeStarSourceConnection`. |
+| **CodeConnections** (GitHub, Bitbucket, GitLab) | Default for third-party Git | GitHub App, modern. Action type: `CodeStarSourceConnection` (action name retained the original branding). |
 | GitHub via OAuth token | Legacy | Deprecated. New pipelines should not use it. |
 | S3 | Drop-zip-into-bucket triggers | `pollForSourceChanges: false` + S3 event notifications via CloudWatch. |
 | CodeCommit | Internal AWS Git | **Deprecated for new accounts as of 2024-07.** Existing customers keep access; do not adopt for greenfield. |
 | ECR (image push triggers pipeline) | Container-as-source | `pipelineType: V2` recommended for image tag filters. |
 
-### CodeStar Connections setup
+### CodeConnections setup
+
+> Naming: AWS renamed CodeStar Connections → CodeConnections in late 2023. The CLI (`aws codestar-connections ...`), ARN namespace (`arn:aws:codestar-connections:...`), IAM action (`codestar-connections:UseConnection`), and pipeline action provider (`CodeStarSourceConnection`) all kept their original names for backward compatibility. New `aws codeconnections` CLI commands also work. Either form is valid.
 
 Connection is a separate account-level resource (Console → Developer Tools → Settings → Connections, or `aws codestar-connections create-connection`). The first-time flow requires browser-based authorization by a GitHub org admin — there's no purely API path.
 

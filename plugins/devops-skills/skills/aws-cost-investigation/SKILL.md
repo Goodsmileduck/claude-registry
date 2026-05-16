@@ -415,7 +415,7 @@ Use CUR over Cost Explorer when:
 
 Setup (one-time):
 
-1. Billing → Data Exports → Create Export → Standard data export → CUR 2.0 (the modern format; the legacy CUR is being deprecated).
+1. Billing → Data Exports → Create Export → Standard data export → CUR 2.0. New exports are only created via the Data Exports page; legacy CUR exports created through the older "Cost & Usage Reports" page still work but new ones must go through Data Exports.
 2. Lands as Parquet in an S3 bucket, partitioned by `billing_period`.
 3. Optionally enable Athena integration — AWS generates a CloudFormation template that creates the table + Glue crawler.
 

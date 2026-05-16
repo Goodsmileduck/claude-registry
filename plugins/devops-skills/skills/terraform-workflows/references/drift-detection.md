@@ -1,78 +1,84 @@
-# Drift Detection
+# Drift detection
 
-> Parent: [`../SKILL.md`](../SKILL.md). Provider identity verification, plan-then-apply, and one-owner-per-resource rules from the parent apply here.
+> Parent: [`../SKILL.md`](../SKILL.md). Provider identity verification, plan-then-apply, and the one-owner-per-resource rule from the parent govern this whole reference — re-read them if "fixing drift" is on the table.
 
-Detect and categorize drift between Terraform state and actual cloud resources. Drift = out-of-band changes that will cause noise (or worse) on the next apply.
+Drift = the live cloud resource doesn't match Terraform's recorded state. Detection is the moment to establish ownership — running `apply` to "fix" drift without that step is how you start a controller war.
 
-## Before "fixing" drift — establish ownership first
+## First question: who owns this resource?
 
-Drift detection is the *first* step, not the fix. Who fixes what depends on who owns the resource:
+Apply the one-owner rule from `../SKILL.md` §4. The reference for the loser-side cleanup is `state-operations.md`.
 
-| Situation | Fix |
+| Situation | Action |
 |---|---|
-| Resource is managed by ArgoCD / Flux / another controller; Terraform also has it | The other controller owns it. Remove from Terraform (`state rm` + delete the HCL) or add `lifecycle { ignore_changes = [...] }` for the fields the other side mutates. **Do NOT `terraform apply` to "fix"** — that starts a controller war. See `state-operations.md`. |
-| Terraform legitimately owns the resource | Decide *before* applying: is the manual change correct (update TF to match) or wrong (apply TF to revert)? |
-| Resource exists in cloud but not in TF state at all | `terraform import` only if Terraform should own it; otherwise document and leave alone |
+| Another controller manages it (ArgoCD, Flux, an Operator, kubectl, console) and Terraform also has it | Hand off — see `state-operations.md`. |
+| Terraform is the legitimate owner | Decide *before* applying: is the live drift the correct state (update HCL) or wrong (revert via apply)? |
+| Resource is in the cloud but not in any state file | `terraform import` only if Terraform should own it. Otherwise document and leave alone. |
 
-**Anti-pattern:** mutating the live resource to make reality match Terraform so the next plan is clean. That hides the real problem. See the `argocd-operations` skill for the full GitOps posture.
+The anti-pattern is mutating the live resource to silence the next plan. The drift itself is signal; suppressing it without diagnosis loses information. See the `argocd-operations` skill for the GitOps posture this references.
 
-## Step 1 — Refresh state
+## Surface the drift cleanly
 
 ```bash
-terraform init                              # if backend/providers changed
+terraform init                              # if backend or providers changed
 terraform plan -refresh-only -out=drift.out
 terraform show -json drift.out > drift.json
 ```
 
-`-refresh-only` updates state from real infrastructure without proposing config changes — it's the cleanest way to surface only the drift.
+`-refresh-only` reconciles state against reality without proposing config-side changes — the cleanest signal isolation Terraform offers.
 
-## Step 2 — Categorize the drift
+Count and list:
 
 ```bash
-# Count drifted resources
 jq -r '.resource_drift | length' drift.json
-# List them with the changed attributes
 jq -r '.resource_drift[] | "\(.address): \(.change.actions | join(","))"' drift.json
 ```
 
-| Category | Severity | Examples |
-|---|---|---|
-| **Security drift** | CRITICAL | Security group rules, IAM policies, encryption settings, KMS key policies, public-access flags |
-| **Configuration drift** | HIGH | Instance type, network settings, env vars, scaling thresholds |
-| **Tag drift** | LOW | Tags added/removed outside Terraform |
-| **Metadata drift** | INFO | Cloud-provider-managed fields that change naturally (e.g. AWS launch template versions, GCE instance fingerprints) |
+## Categorize before reporting
 
-## Step 3 — Identify probable cause for each drifted resource
-
-For each drift entry, work top-down through these causes:
-
-1. **Another controller manages this** — check labels/annotations on K8s resources, `managed-by` tags on cloud resources, prior commits that introduced a second controller
-2. **Click-ops** — check the cloud provider's audit log (CloudTrail, GCP Audit Logs, Activity Log) around the drift's first detection
-3. **CI/CD race** — multiple pipelines applying to the same state
-4. **Provider auto-update** — managed services (RDS minor versions, GKE node pool images) where the cloud edits the resource
-
-## Step 4 — Resolution options (present to user)
-
-| Option | Command | When |
-|---|---|---|
-| **Accept drift** (state catches up to reality) | `terraform apply -refresh-only` | The manual change is correct and intended to stick |
-| **Reject drift** (revert reality to match TF) | `terraform apply` (normal) | The manual change is wrong and should be undone |
-| **Hand off ownership** | `state rm` + remove from HCL | Another controller should own this — see `state-operations.md` |
-| **Investigate first** | (none) | Cause is unclear; involve a human before changing anything |
-
-**Never auto-resolve drift.** Always present options and wait for an explicit choice. Drift is signal — silencing it without diagnosis loses information.
-
-## Common drift sources
-
-| Source | Typical resolution |
+| Severity | Examples |
 |---|---|
-| Auto-scaling adjustments | Accept (or add `ignore_changes` on `desired_capacity`) |
-| Manager service auto-updates (RDS minor versions, GKE node pool images) | Accept; add `ignore_changes` on the upgrade-related fields |
-| Emergency manual fixes | Accept + commit the equivalent IaC change immediately |
-| Console click-ops mistakes | Reject |
-| Conflicting controllers | Fix ownership (root cause) — neither accept nor reject is right |
-| First-time integration where a tool added fields | Add `ignore_changes`; document why |
+| **CRITICAL** | Security groups, IAM, encryption, KMS policy, public-access flags |
+| **HIGH** | Instance class, networking, environment variables, autoscaling thresholds |
+| **LOW** | Tags |
+| **INFO** | Provider-managed fields that drift naturally (launch template versions, instance fingerprints, RDS minor version increments) |
 
-## What to report
+## Probable-cause checklist, top-down
 
-Keep the report tight — drifted-resource count, severity breakdown, cause hypothesis for each, and the recommended resolution. The user decides; this skill informs.
+Run these against each drifted address until something fits:
+
+1. **Another controller** — labels/annotations on K8s, `managed-by` tags on cloud resources, the git log for the commit that introduced a parallel controller.
+2. **Console click-ops** — cloud audit log around the drift's apparent start: CloudTrail, GCP Audit Logs, Azure Activity Log.
+3. **Pipeline race** — two CI/CD jobs applying to the same state from different branches.
+4. **Provider self-mutation** — managed services that edit themselves (RDS minor bumps, GKE node pool image refreshes).
+
+## Resolution menu — never auto-pick
+
+Present these to the user; let them choose explicitly.
+
+| Choice | Mechanism | When |
+|---|---|---|
+| Accept drift | `terraform apply -refresh-only` | The manual change is correct and intentional |
+| Reject drift | `terraform apply` (normal) | The manual change was wrong; revert |
+| Hand off ownership | `state rm` + delete the HCL block (or `ignore_changes`) | A different controller should own this |
+| Investigate | (no change yet) | Cause is unclear; pull in a human |
+
+## Common sources mapped to the usual resolution
+
+| Source | Usual choice |
+|---|---|
+| Autoscaling adjusting `desired_capacity` | Accept or `ignore_changes` |
+| Managed-service self-upgrade (RDS minor, GKE node image) | Accept and add `ignore_changes` on the affected fields |
+| Emergency hot-fix to live infra | Accept *and* commit the equivalent IaC change in the same PR |
+| Console click-ops mistake | Reject |
+| Two controllers fighting | Don't accept or reject — fix the ownership root cause |
+| First-time integration that added new fields | `ignore_changes` with a one-line comment explaining why |
+
+## Reporting shape
+
+Keep the report tight:
+
+- Drifted-resource count + severity breakdown.
+- One-line cause hypothesis per address.
+- Suggested resolution per address.
+
+The user decides; this reference equips them to decide quickly. A long narrative drift report buries the choice they actually need to make.

@@ -1,163 +1,160 @@
-# State Operations
+# State operations
 
-> Parent: [`../SKILL.md`](../SKILL.md). The one-owner-per-resource rule from the parent is what most state ops exist to enforce — read it first if you haven't.
+> Parent: [`../SKILL.md`](../SKILL.md). The one-owner-per-resource rule from the parent is the reason most state surgery exists — re-read it if you haven't.
 
-State operations modify Terraform's understanding of infrastructure without changing actual resources. Mistakes orphan resources or trigger recreates of live infrastructure — always back up, document, and get explicit approval before executing.
+State operations rewrite Terraform's view of the world without touching live infrastructure. The failure modes are orphaned resources, silent recreates, and cross-controller fights. The Pre-flight section below is non-negotiable.
 
 ## Contents
 
-- Why state ops happen — the ownership-change trigger
-- Pre-operation safety — Terragrunt note, backup, document, approval
-- Operations reference — `state mv`, `state rm`, `import`, `pull`/`push`, `force-unlock`
-- Recovery procedures — corrupted state, wrong removal, orphans
-- Risk gradient — per-op risk level and what to highlight in the approval ask
+- Why state ops exist (ownership change patterns)
+- Pre-flight: Terragrunt wrapper, backup, document, approval
+- Operations: `state mv`, `state rm`, `import`, `pull`/`push`, `force-unlock`
+- Recovery: corrupted state, accidental removal, orphans
+- Risk gradient — what to highlight when asking for approval
 
 ## Why state ops happen
 
-Almost every state op exists because of an ownership change:
+Almost every state op is triggered by an ownership change. Identify the trigger before reaching for the command:
 
 | Trigger | Operation |
 |---|---|
-| Resource was created by another tool (Helm, console, kubectl, another TF root) and should now be TF-managed | `import` |
-| Module was refactored; resource address changed | `state mv` |
-| Resource is being handed off from TF to ArgoCD (or vice versa) | `state rm` on the losing side, configure the winning side separately |
-| State got corrupted or backend moved | `pull` / `push` |
+| A resource was created by another tool (Helm, console, kubectl, a second TF root) and should become Terraform-managed | `import` |
+| A module refactor moved a resource's address | `state mv` |
+| Ownership is moving between TF and another controller (e.g. ArgoCD takes over) | `state rm` on the losing side; configure the winning side separately |
+| State got corrupted, or the backend moved | `pull` / `push` |
 
-Whatever the trigger, **close the ownership loop on the losing side** before considering the op complete — either remove from the losing source-of-truth or add `lifecycle { ignore_changes = [...] }`. See parent SKILL.md §4.
+Whatever the trigger, **close the ownership loop on the losing side** before considering the op complete: remove from the losing source-of-truth, or pin `ignore_changes` on the contested fields. See `../SKILL.md` §4.
 
-## Pre-operation safety (always, no exceptions)
+## Pre-flight — no exceptions
 
-### Terragrunt note
+### Terragrunt wrapper
 
-If this is a Terragrunt unit, run state ops through the wrapper — not against the cached copy:
+If this is a Terragrunt unit, drive the op through Terragrunt — never into the cached copy:
 
 ```bash
 terragrunt state pull > "$BACKUP_NAME"
 terragrunt state mv <src> <dst>
 
-# Wrong — runs against .terragrunt-cache/<hash>/<path>/ with potentially stale backend:
+# Wrong — operates on .terragrunt-cache/<hash>/<path>/ with a stale backend:
 # cd .terragrunt-cache/<hash>/<path>/ && terraform state mv ...
 ```
 
-See `terragrunt.md` for cache path mapping.
+Cache-path mapping is in `terragrunt.md`.
 
-### 1. Backup
+### Backup
 
 ```bash
 BACKUP_NAME="state-backup-$(date +%Y%m%d-%H%M%S).tfstate"
 
-# Local state
+# Local backend
 cp terraform.tfstate "$BACKUP_NAME"
 
-# Remote state (any backend: S3, GCS, DO Spaces, Azure Blob, etc.)
+# Remote backend (S3, GCS, DO Spaces, Azure Blob, etc.)
 terraform state pull > "$BACKUP_NAME"
 
 # Terragrunt
 terragrunt state pull > "$BACKUP_NAME"
 ```
 
-### 2. Document
+### Document before executing
 
-Before executing, write the plan somewhere durable:
+Write the plan somewhere the next person (or you, six months from now) can find:
 
 ```markdown
-**Op:** [state mv | state rm | import]
-**Source addr:** ...
+**Op:**            state mv | state rm | import
+**Source addr:**   ...
 **Dest addr / cloud ID:** ...
-**Reason:** ...
-**Backup:** $BACKUP_NAME
-**Rollback:** restore $BACKUP_NAME via `terraform state push`
-**Loser-side cleanup:** [HCL removal | ignore_changes block | manifest deletion]
+**Why:**           ...
+**Backup file:**   $BACKUP_NAME
+**Rollback:**      terraform state push $BACKUP_NAME
+**Loser-side cleanup:** HCL removed | ignore_changes block added | manifest deleted
 ```
 
-### 3. Get explicit approval
+### Explicit approval
 
-Print the resolved command + scope, then wait. A generic "yes" earlier in the conversation does not authorize a state op. The user must say "go" to this specific op.
+Print the exact resolved command. Wait. A "yes" earlier in the chat to something else does **not** authorize a state op; ownership-changing commands require approval on the specific command shown.
 
-## Operations reference
+## Operations
 
-### `terraform state mv` — rename / reorganize
+### `state mv` — rename / reorganize
 
 ```bash
-terraform state list                                          # see what's there
+terraform state list
 terraform state mv aws_instance.old_name aws_instance.new_name
 terraform state mv aws_instance.web module.web.aws_instance.this
 terraform state mv module.old.aws_instance.web module.new.aws_instance.web
 ```
 
-**Verify:** `terraform plan` → should show no changes.
+Verification: `terraform plan` should report no changes.
 
-### `terraform state rm` — remove from state without destroying
+### `state rm` — stop managing without destroying
 
-Used to hand off ownership or to stop managing a resource. The resource continues to exist in the cloud.
+The cloud resource keeps running; Terraform forgets it.
 
 ```bash
 terraform state rm aws_instance.legacy
 terraform state rm module.legacy
 ```
 
-**WARNING:** If you don't also remove the resource from the HCL, the next plan will try to *recreate* it (TF sees code but no state → "needs to be created"). Either remove from code or add `ignore_changes` — close the loop.
+Trap: leaving the HCL block in place after `state rm`. The next plan sees code without state and proposes a fresh create. Either delete the HCL or pin `ignore_changes` on the contested fields.
 
-### `terraform import` — adopt existing infrastructure
+### `import` — adopt an existing resource
 
-```bash
-# 1. Write the resource block in HCL first (matching the actual config)
-# 2. Import:
-terraform import aws_instance.web i-1234567890abcdef0
-# Module path:
-terraform import module.web.aws_instance.this i-1234567890abcdef0
-# 3. terraform plan → should show no changes (or only acceptable diffs you'll then encode in HCL)
+Discipline: **code → import → plan**. Write the matching HCL block first, then run import, then plan-verify.
+
+Two forms:
+
+```hcl
+# Plannable form (Terraform 1.5+, OpenTofu) — preferred for review-driven workflows.
+import {
+  to = aws_instance.web
+  id = "i-1234567890abcdef0"
+}
 ```
 
-Importing without writing the HCL first leaves you with state-but-no-code, and the next plan deletes the resource. Always: code first, import second, plan third.
+```bash
+# Imperative CLI form — always available.
+terraform import aws_instance.web i-1234567890abcdef0
+terraform import module.web.aws_instance.this i-1234567890abcdef0
+```
 
-### `terraform state pull` / `push` — backup, migrate, restore
+The `import {}` block surfaces in `terraform plan` like any other change, which makes it auditable in PRs. The CLI form is one-shot.
+
+Importing without HCL leaves state-but-no-code; the next plan deletes the resource. The post-import plan should be empty (or only show diffs you'll then encode in HCL).
+
+### `pull` / `push` — backup, migrate, restore
 
 ```bash
 terraform state pull > state.json
-
-# state push is DANGEROUS — typically hook-blocked.
-# terraform state push state.json
+# terraform state push state.json   # DANGEROUS — usually hook-blocked
 ```
 
-### `terraform force-unlock` — break a stuck lock
+### `force-unlock` — break a stuck lock
 
-Only when you're certain no other operation is in progress (another `apply` running, another team member). Get the lock ID from the error message:
+Only when you're certain no other apply is running. Lock ID comes from the error message:
 
 ```bash
 terraform force-unlock <lock-id>
 ```
 
-Wrong unlocks cause concurrent writes and state corruption — confirm no one else is running TF in this layer before doing this.
+Wrong unlocks cause concurrent writes and state corruption. Confirm with the rest of the team (or your CI logs) before unlocking.
 
-## Recovery procedures
+## Recovery
 
-### State corrupted
+| Problem | Recovery |
+|---|---|
+| State corrupted | `cp $BACKUP_NAME terraform.tfstate` for local backends, or `terraform state push $BACKUP_NAME` for remote. Confirm no concurrent apply first. |
+| `state rm` removed the wrong resource | `terraform state push $BACKUP_NAME` then `terraform init -reconfigure` |
+| Cloud resource is orphaned (state says no, cloud says yes) | Either re-import or manually delete. Surface the choice — don't decide alone. |
 
-```bash
-cp "$BACKUP_NAME" terraform.tfstate
-# For remote state, you may need to:
-terraform state push "$BACKUP_NAME"
-# (Be sure no one else is mid-apply.)
-```
+## Risk gradient
 
-### Wrong resources removed (`state rm` mistake)
-
-```bash
-terraform state push "$BACKUP_NAME"   # restore from backup
-terraform init -reconfigure           # sync with backend
-```
-
-### Resources orphaned in the cloud
-
-Either re-import them (`terraform import …`) or delete them manually if no longer needed. Surface the choice to the user; don't decide unilaterally.
-
-## Risk gradient (for the approval ask)
+For the approval ask, pair the op with what specifically warrants escalation:
 
 | Op | Risk | What to highlight |
 |---|---|---|
-| `state mv` | Low | Source and destination address; verify no changes after |
-| `state rm` | Medium | The resource keeps existing in the cloud but TF stops managing — emphasize this |
-| `import` | Medium | HCL must already match real config; otherwise next plan diffs |
-| `force-unlock` | Medium | Confirm no concurrent operation; wrong unlock corrupts state |
-| `state push` | High | Hook usually blocks; only with explicit "I understand the risk, push state.json" |
+| `state mv` | LOW | Source and destination addresses; verify "no changes" after |
+| `state rm` | MEDIUM | Resource keeps existing in cloud; TF stops managing it |
+| `import` | MEDIUM | HCL must already match real config or the next plan diffs |
+| `force-unlock` | MEDIUM | Confirm no concurrent op; wrong unlock corrupts state |
+| `state push` | HIGH | Hook usually blocks; require "I understand the risk, push state.json" |

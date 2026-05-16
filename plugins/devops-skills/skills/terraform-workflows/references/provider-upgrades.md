@@ -1,127 +1,117 @@
-# Provider Upgrades
+# Provider upgrades
 
-> Parent: [`../SKILL.md`](../SKILL.md). The parent's "never bump pins in passing" rule is what makes this a dedicated workflow — pin changes are the whole task, not a side-effect.
+> Parent: [`../SKILL.md`](../SKILL.md). The "never bump pins in passing" rule from the parent is why this is a dedicated workflow — pin changes are the entire task, not a side effect of another change.
 
-Use when *intentionally* bumping a provider, the Terraform/OpenTofu `required_version`, or a module `?ref=`. Analyze breaking changes, identify code modifications, plan state migrations, then apply with explicit user approval.
+Use when **deliberately** raising a provider, the Terraform / OpenTofu `required_version`, or a module `?ref=`. The order is: research breaking changes → scan the codebase → write the plan → execute with approval.
 
 ## Contents
 
-- Step 1 — Capture current state (`terraform version`, `providers`, `.terraform.lock.hcl`)
-- Step 2 — Identify target version
-- Step 3 — Research breaking changes (provider-specific changelog and guide locations)
-- Step 4 — Categorize the breaking changes (removed/renamed/default/required)
-- Step 5 — Scan the code for affected patterns
-- Step 6 — Generate the upgrade report (template included)
-- Step 7 — Execute the upgrade (backup, init -upgrade, code changes, state migrations, plan, apply)
-- Risk by version delta (major / minor / patch)
-- Common traps — lock-file platforms, deleted tags, transitive bumps, namespace moves
-- After the upgrade
+- Capture current state — `terraform version`, `providers`, `.terraform.lock.hcl`
+- Pick the target — one provider at a time across majors
+- Read the upstream upgrade guide — per-provider changelog/guide table
+- Categorize the breaking changes — removed/renamed/default/required taxonomy
+- Scan for affected patterns — grep recipes per category
+- Write the upgrade report — markdown template
+- Execute — backup → init -upgrade → code edits → state migrations → plan → apply
+- Risk by version delta — major / minor / patch
+- Common traps — lock file platforms, deleted refs, transitive bumps, namespace moves
+- Aftercare — new warnings, migrations applied, constraint relaxation
 
-## Step 1 — Capture current state
+## Capture current state
 
 ```bash
-terraform version                # binary version
-terraform providers              # provider versions in use
-cat .terraform.lock.hcl          # exact pinned versions + hashes
+terraform version                # binary version (also: tofu version)
+terraform providers              # which providers, which versions
+cat .terraform.lock.hcl          # exact pins + per-platform hashes
 ```
 
-## Step 2 — Identify target version
+## Pick the target
 
-Decide explicitly:
-- Latest stable, specific version, next major, or next minor?
-- One provider or several at once? (Prefer one at a time for major bumps.)
+Decide and write it down before doing anything:
 
-## Step 3 — Research breaking changes
+- Which version? Latest stable, a specific tag, or the next minor only?
+- One provider or several at once? Bump providers one at a time across majors; combine only across patches.
 
-Read the official upgrade guide and changelog *before* touching code:
+## Read the upstream upgrade guide
+
+Always the **upgrade guide** before the changelog — guides cover user-facing breakage; changelogs drown that signal in internal churn.
 
 | Provider | Changelog | Upgrade guide path |
 |---|---|---|
-| `hashicorp/aws` | github.com/hashicorp/terraform-provider-aws CHANGELOG.md | `/docs/guides/version-X-upgrade` |
-| `hashicorp/google` | github.com/hashicorp/terraform-provider-google CHANGELOG.md | `/docs/guides/version_X_upgrade` |
-| `hashicorp/azurerm` | github.com/hashicorp/terraform-provider-azurerm CHANGELOG.md | `/docs/guides/X.0-upgrade-guide` |
-| `digitalocean/digitalocean` | github.com/digitalocean/terraform-provider-digitalocean CHANGELOG.md | release notes |
-| `cloudflare/cloudflare` | github.com/cloudflare/terraform-provider-cloudflare CHANGELOG.md | `/docs/guides/version-X-upgrade` |
+| `hashicorp/aws` | terraform-provider-aws/CHANGELOG.md | `/docs/guides/version-X-upgrade` |
+| `hashicorp/google` | terraform-provider-google/CHANGELOG.md | `/docs/guides/version_X_upgrade` |
+| `hashicorp/azurerm` | terraform-provider-azurerm/CHANGELOG.md | `/docs/guides/X.0-upgrade-guide` |
+| `digitalocean/digitalocean` | terraform-provider-digitalocean/CHANGELOG.md | Release notes |
+| `cloudflare/cloudflare` | terraform-provider-cloudflare/CHANGELOG.md | `/docs/guides/version-X-upgrade` |
 
-Prefer the official upgrade guide over the changelog — guides focus on the changes that affect users; changelogs include internal churn.
+For anything outside this list, use Context7 MCP (`resolve-library-id` → `query-docs`) to fetch the current guide — training data lags reality.
 
-## Step 4 — Categorize the breaking changes
+## Categorize the breaking changes
 
-| Category | Impact | Action |
+| Category | Impact | What to do |
 |---|---|---|
-| **Removed resource** | HIGH | Find usages, plan replacement; may need `state mv` to a new resource type |
-| **Removed argument** | HIGH | Find usages, decide new equivalent or removal |
-| **Renamed resource** | HIGH | Plan `state mv` for every affected address |
-| **Changed default** | MEDIUM | Decide: explicit set to old value, or accept new default |
-| **New required arg** | MEDIUM | Add to all affected blocks |
-| **Deprecation only** | LOW | Plan migration before the next major; not blocking now |
+| Removed resource | HIGH | Find usages; plan replacement (may require `state mv` to a new resource type) |
+| Removed argument | HIGH | Find usages; pick the new equivalent or drop the argument |
+| Renamed resource | HIGH | Plan a `state mv` per affected address |
+| Changed default | MEDIUM | Decide: set explicitly to the old value, or accept the new default |
+| New required argument | MEDIUM | Add it to all affected blocks |
+| Deprecation only | LOW | Plan migration before the next major; not blocking now |
 
-## Step 5 — Scan the code for affected patterns
+## Scan the codebase
 
 ```bash
-# Removed/renamed resource type
+# Removed / renamed resource type
 grep -rn "aws_old_resource_type" --include="*.tf"
 
-# Removed/renamed argument
+# Removed / renamed argument
 grep -rn "old_argument_name" --include="*.tf"
 
-# Modules pinned to a ref that may not exist after upgrade
+# Modules pinned to a ref that may have moved
 grep -rn 'source.*?ref=' --include="*.tf"
 ```
 
-Build a per-file list of touches. Plan all changes before applying any.
+Build a per-file inventory. Plan every change before applying any of them — partial edits between init and apply are the failure mode here.
 
-## Step 6 — Generate the upgrade report
+## Upgrade report template
 
 ```markdown
-## Provider Upgrade — <provider> <current> → <target>
+## Provider upgrade — <provider> <current> → <target>
 
-### Risk: [HIGH | MEDIUM | LOW]
+### Risk: HIGH | MEDIUM | LOW
 
-### Breaking changes affecting this codebase
+### Breaking changes that hit this codebase
+
 1. <change name>
-   - Type: removed argument / renamed resource / changed default / new required arg
+   - Kind: removed argument | renamed resource | changed default | new required arg
    - Affected: <resource_type>.<attribute>
    - Files:
      - modules/compute/main.tf:45
      - environments/prod/instances.tf:23
    - Action: <specific fix>
 
-### State migrations required
+### State migrations
+
 - [ ] `aws_old.foo` → `aws_new.foo` (state mv)
 - [ ] ...
 
-### Deprecations to plan for (not blocking now)
-- `aws_old_thing` → use `aws_new_thing` (removed in next major)
+### Deprecations to plan for (non-blocking)
 
-### Upgrade plan
-1. Backup state: `terraform state pull > backup-$(date +%Y%m%d).tfstate`
-2. Update `required_providers` version constraint
-3. `terraform init -upgrade`
-4. Apply code changes (per list above)
-5. Run state migrations (per list above)
-6. `terraform plan` — verify only the intended changes show
-7. Review + apply
+- `aws_old_thing` → `aws_new_thing` (slated for removal in next major)
 ```
 
-## Step 7 — Execute (with approval)
+## Execute — with approval
 
 ```bash
-# Backup first
 terraform state pull > "backup-$(date +%Y%m%d-%H%M%S).tfstate"
 
-# Update version constraint in versions.tf (or required_providers block)
-# Then:
+# Bump required_providers in versions.tf, then:
 terraform init -upgrade           # rewrites .terraform.lock.hcl
 
-# Apply code changes per the report
+# Apply code edits per the report.
 
-# State migrations, if any
-terraform state mv <old> <new>    # see state-operations.md
+terraform state mv <old> <new>    # per-resource migrations; see state-operations.md
 
-# Final plan + apply (per plan-review.md)
-terraform plan -out=upgrade.plan
-# Review carefully — esp. fields the provider auto-populates differently
+terraform plan -out=upgrade.plan  # final review per plan-review.md
 terraform apply upgrade.plan
 ```
 
@@ -129,20 +119,21 @@ terraform apply upgrade.plan
 
 | Delta | Typical risk | Approach |
 |---|---|---|
-| Major (4.x → 5.x) | HIGH — breaking changes expected | Full upgrade guide; test in non-prod; explicit approval |
-| Minor (5.1 → 5.2) | LOW — usually backward compatible | Read changelog; watch for new deprecation warnings |
-| Patch (5.1.0 → 5.1.1) | LOW — bug fixes only | Read changelog briefly; generally safe |
+| Major (4.x → 5.x) | HIGH | Full upgrade guide; non-prod first; explicit approval at every step |
+| Minor (5.1 → 5.2) | LOW | Skim the changelog; watch for new deprecation warnings |
+| Patch (5.1.0 → 5.1.1) | LOW | Brief changelog scan; generally safe |
 
 ## Common traps
 
-- **`.terraform.lock.hcl` not regenerated for all platforms** — if your team has mixed darwin/linux, run `terraform init -upgrade` once and commit the resulting `.terraform.lock.hcl` with `linux_amd64` + `darwin_arm64` + `darwin_amd64` hashes.
-- **Module `?ref=` pointing to a deleted tag** — the upstream repo may have force-pushed; pin to a commit SHA, not a branch.
-- **Hidden bumps via dependency chains** — bumping `aws` may transitively require bumping a Terraform module that wraps it. Surface the chain.
-- **Provider name changes** — a provider may have moved namespaces (`hashicorp/foo` → `community/foo`). `terraform providers` will show this; update the `source =` line.
+- **Lock file missing some platforms.** Run `terraform init -upgrade` once per OS in CI/dev, or use `terraform providers lock -platform=linux_amd64 -platform=darwin_arm64 -platform=darwin_amd64` to materialize the hashes you need, then commit.
+- **`?ref=` pointing to a deleted or force-pushed tag.** Pin to a commit SHA, not a branch.
+- **Hidden transitive bumps.** Provider X often pulls a wrapper module that's pinned older. Surface the chain rather than chasing it during apply.
+- **Provider namespace moves** (`hashicorp/foo` → `community/foo`). `terraform providers` will show the new namespace; update `source =` and re-init.
 
-## After the upgrade
+## Aftercare
 
 Surface to the user:
-- New deprecation warnings now appearing in `terraform plan` output
-- Any state migrations that landed (with the old → new address mapping)
-- Suggested follow-up: bumping the version constraint to `~> NEW.0` instead of pinning exact, so patch updates auto-apply
+
+- New deprecation warnings now appearing in `terraform plan`.
+- Each state migration that ran, with the old → new address mapping.
+- Recommended follow-up: relax the version constraint to `~> NEW.0` so patch updates auto-apply, but keep major pinned.

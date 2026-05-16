@@ -14,3 +14,5 @@ Thumbs.db
 
 # Node modules (if any plugins use npm)
 node_modules/
+plan.md
+CLAUDE.md

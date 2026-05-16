@@ -39,7 +39,7 @@ spec:
 ```
 
 **Why these matter:**
-- `goTemplate: true` — the legacy `fasttemplate` engine is being phased out; new ApplicationSets should use Go templates. Required for `range`, conditionals, and complex parameter shaping.
+- `goTemplate: true` — `fasttemplate` is the legacy engine; Go templates are the default for new ApplicationSets and required for `range`, conditionals, and complex parameter shaping.
 - `missingkey=error` — without it, a typo like `{{.naem}}` silently renders empty and you get an Application named `prod-` deploying to namespace `-prod`. This is the single most common ApplicationSet bug.
 - `applicationsSync: create-update` — the controller will not delete Applications when a generator stops emitting them. Critical for production; without it a transient API error from the SCM Provider generator can prune all your apps.
 - `preserveResourcesOnDeletion: true` — if a user accidentally deletes the ApplicationSet, the generated Applications and their workloads survive.

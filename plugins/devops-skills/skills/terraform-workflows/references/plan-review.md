@@ -1,86 +1,77 @@
-# Plan Review
+# Plan review
 
-> Parent: [`../SKILL.md`](../SKILL.md). All cross-cutting rules (provider identity verification, plan-then-apply only, no in-passing pin bumps) are in the parent and apply here.
+> Parent: [`../SKILL.md`](../SKILL.md). Provider identity verification, plan-then-apply discipline, and the "never bump pins in passing" rule live there and apply to everything below.
 
-Workflow for analyzing a `terraform plan` before approving an apply. Use this when the plan is non-trivial (any destroys, IAM changes, or production state) or when you need a structured second-pair-of-eyes review.
+How to review a `terraform plan` before approving an apply. Use whenever the plan is non-trivial — anything with destroys, IAM mutations, or production state.
 
-## Step 1 — Generate the plan file
+## Generate a plan file the apply will reuse
 
 ```bash
-terraform init                          # only if backend or providers changed
+terraform init                          # if backend or providers changed
 terraform plan -out=plan.out
 terraform show -json plan.out > plan.json
 ```
 
-`-out=` is mandatory — it's the only way to guarantee the apply runs against the same plan you reviewed.
+`-out=plan.out` is required by `../SKILL.md` — it pins the apply to the exact change you reviewed.
 
-## Step 2 — Print the blast-radius summary first
+## Lead with the destroy count
 
-Before any analysis, print one line the user can stop you at:
+Before any analysis, surface a one-liner the user can interrupt on:
 
 ```bash
 jq -r '
   [.resource_changes[] | .change.actions[]] |
   group_by(.) | map({key: .[0], value: length}) | from_entries
 ' plan.json
-# → {"create": N, "update": M, "delete": K, ...}
 ```
 
-Output exactly: `Plan summary: N to add, M to change, K to destroy. Env: <env>.`
+Then print exactly: `Plan summary: N to add, M to change, K to destroy. Env: <env>.`
 
-If `K > 0` outside ephemeral dev, halt and require explicit "go ahead with K destroys" before any further analysis. Do not bury destroys inside a longer report.
+Rule: if `K > 0` outside an ephemeral dev environment, stop here and require explicit "go ahead with K destroys" before continuing. Destroys buried at the end of a long report get rubber-stamped.
 
-List any `prevent_destroy` resources the plan touches:
+Cross-check `prevent_destroy`:
 
 ```bash
 jq -r '.resource_changes[] | select(.change.actions[] | contains("delete")) | .address' plan.json
-# Grep the source for `prevent_destroy = true` on each address.
+# Then grep the source for `prevent_destroy = true` on each address.
 ```
 
-A planned delete of a `prevent_destroy` resource will fail at apply — but the *intent* still needs explicit acknowledgement.
+A plan that deletes a `prevent_destroy` resource will fail at apply — but the **intent** still demands a separate acknowledgement.
 
-## Step 3 — Parallel analysis (for non-trivial plans)
+## Analyze in parallel for large plans
 
-When the plan is large or risky, dispatch three analyses in a single message (parallel):
+When the plan is big or touches risk-bearing surface, fan out three analyses in a single batch:
 
-```
-Task 1 — risk:
-  Analyze plan.json for cascade effects, destroy operations, modification
-  risks. Output: risk level (CRITICAL/HIGH/MEDIUM/LOW) + ranked findings.
+| Lane | What it produces |
+|---|---|
+| **Risk** | Cascade effects, destroy ordering, modification blast radius. Output: severity tier + ranked findings. |
+| **Security** | IAM principal scope, network exposure, encryption posture, cross-account additions. |
+| **Historical** | Prior changes to the same addresses, past incidents, rollback patterns. See `historical-patterns.md`. |
 
-Task 2 — security:
-  Review plan.json for IAM, network, encryption, and compliance impact.
-  Flag: security-weakening changes, over-broad principals, public exposure.
+Merge the three into one aggregated report. Three separate analyses presented sequentially is worse than one synthesis — the user can't see the cross-cuts.
 
-Task 3 — historical:
-  See `historical-patterns.md`. Check git history for prior changes to the
-  affected resources; surface past incidents or rollbacks.
-```
+## Approval gate
 
-Aggregate into a single report; do not present three separate analyses to the user.
-
-## Step 4 — Approval gate
-
-Present the aggregated findings with the explicit destroy count, then wait for `approve` (or equivalent explicit go). Do not proceed on a generic "yes" — the rule from the parent SKILL.md applies: a "yes" is scoped to the previous question, not the whole plan.
+Present the aggregated findings with the destroy count restated, then wait for an explicit affirmative on **this specific apply**. A "yes" earlier in the conversation about something else does not carry over (per the destroy-gate rule in `../SKILL.md`).
 
 ```bash
 # Only after explicit approval:
 terraform apply plan.out
 ```
 
-## Risk taxonomy (for the aggregated report)
+## Severity tiering
 
-| Level | What qualifies |
+| Tier | Triggers |
 |---|---|
-| **CRITICAL** | Any destroy on stateful/data resources; IAM principal expansions; encryption key changes; cross-account access additions |
-| **HIGH** | Network/SG/firewall changes that affect reachability; load balancer modifications; DNS changes on production zones |
-| **MEDIUM** | Instance type changes; non-trivial config updates; tag changes that affect cost allocation |
-| **LOW** | Pure adds with no dependencies; documentation-only; tag-only updates |
+| **CRITICAL** | Destroys on stateful/data resources; IAM principal widening; KMS or encryption changes; new cross-account trust |
+| **HIGH** | Reachability changes (SG / firewall / NACL); load balancer mutations; production DNS |
+| **MEDIUM** | Instance class or size changes; non-trivial spec updates; cost-allocation tag changes |
+| **LOW** | Pure adds with no dependents; documentation-only; benign tag-only diffs |
 
-## Common patterns to flag explicitly
+## Patterns worth explicit calling out
 
-- **Cascade deletions** — one destroy triggers others via `depends_on` or implicit references
-- **State drift in the plan** — fields changing that you didn't touch in code → see `drift-detection.md`
-- **Security relaxation** — rules becoming more permissive (CIDR widening, principal `*`, public ACL)
-- **Cost impact** — large count/size changes (e.g. `count = 3 → 30`)
-- **First-time CRD / first-time module** — no historical signal; treat as higher risk
+- **Cascade deletes** — one destroy pulling others through `depends_on` or implicit refs.
+- **State drift surfacing inside the change plan** — fields moving that the diff didn't introduce. Cross over to `drift-detection.md`.
+- **Permission relaxation** — CIDR widening, principal `*`, public ACL, removed deny statements.
+- **Cost-shape changes** — counts or sizes scaled by an order of magnitude.
+- **First touches** — a module or resource type that has no history in this repo carries silent risk; flag it as such instead of treating "no findings" as "safe".
