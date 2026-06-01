@@ -1,0 +1,14 @@
+{
+  "name": "pick-the-path",
+  "query": "I want to put GitHub's public MCP server (https://mcp.github.com/mcp) and our internal Notion MCP server behind Cloudflare with Google SSO for my team. We don't have Cloudflare in Terraform today. What's the fastest way? Should I write a Terraform module?",
+  "files": {},
+  "expected_behavior": [
+    "Recommends Path A (AI Controls MCP Portal via REST) for this case — multiple existing MCP URLs, want one URL fronting them with OAuth, no existing IaC. Calls out that Terraform (Path C) is overkill here because there's no Cloudflare IaC to extend.",
+    "Lists the actual steps for Path A: create the Google IdP via REST, POST each server to /accounts/{aid}/access/ai-controls/mcp/servers with auth_type=oauth, complete the dashboard OAuth handshake for each server, create the Access policy with `require { login_method }`, then assemble the portal in the dashboard.",
+    "Acknowledges that the internal Notion MCP needs to be publicly reachable (or sit behind its own tunnel) for the portal to reach it — Path A doesn't tunnel for you; if Notion MCP is private-only, suggest a small Path B carve-out (Access app + tunnel for that one server) and point the portal at the resulting public hostname.",
+    "Flags the AI Controls limit: auth_type is oauth/bearer/unauthenticated only — no Cloudflare Access service-token (dual-header) auth to the upstream.",
+    "Mentions that portal URL composition is currently dashboard-driven (not fully REST). Plan for that manual step.",
+    "Does NOT recommend Terraform as the default just because the user said 'module'.",
+    "Does NOT silently default to Path B (per-hostname Access apps) when the user has 2 URLs and is happy with a portal."
+  ]
+}

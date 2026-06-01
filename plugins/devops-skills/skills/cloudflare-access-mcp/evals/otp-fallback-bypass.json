@@ -1,0 +1,14 @@
+{
+  "name": "otp-fallback-bypass",
+  "query": "We require Google SSO for our MCP server. Policy allowlists @example.com and we set Google as the only allowed IdP. A pentest just showed someone logged in via Cloudflare's email one-time-PIN as alice@example.com without ever hitting Google. How?",
+  "files": {
+    "main.tf": "resource \"cloudflare_zero_trust_access_application\" \"mcp\" {\n  allowed_idps = [cloudflare_zero_trust_access_identity_provider.google.id]\n  auto_redirect_to_identity = true\n  # ...\n}\nresource \"cloudflare_zero_trust_access_policy\" \"mcp_users\" {\n  decision = \"allow\"\n  include = [{ email_domain = { domain = \"example.com\" } }]\n  # no require block\n}\n"
+  },
+  "expected_behavior": [
+    "Identifies the cause: Cloudflare's built-in one-time-PIN identity is available unless the policy explicitly requires a specific login_method. allowed_idps + auto_redirect_to_identity affect the BROWSER UX but do not constrain which identity satisfies the policy — the email allowlist matches any identity asserting that email, including OTP.",
+    "Fix: add require = [{ login_method = { id = cloudflare_zero_trust_access_identity_provider.google.id } }] on the policy. That forces the Google IdP at policy-evaluation time.",
+    "Optionally suggests disabling One-Time PIN account-wide (Zero Trust > Settings > Authentication) if no team uses it.",
+    "Does NOT suggest removing allowed_idps (UI-only effect, doesn't fix the policy).",
+    "Does NOT switch include from email_domain to a Google-group lookup as the fix (different feature, doesn't address the root cause)."
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "name": "managed-oauth-vs-mcp-remote",
+  "query": "I have an MCP server running on ECS, fronted by Cloudflare Access with Google SSO. Users currently configure it in Claude Desktop using mcp-remote as a stdio proxy that does the OAuth dance to Cloudflare. Can I drop mcp-remote so the client connects natively?",
+  "files": {},
+  "expected_behavior": [
+    "Says YES — enable Managed OAuth on the cloudflare_zero_trust_access_application: oauth_configuration { enabled = true, dynamic_client_registration { enabled = true, allow_any_on_localhost = true, allow_any_on_loopback = true } }. That makes the Access app publish /.well-known/oauth-authorization-server, /authorize, /token, and DCR registration at the upstream hostname.",
+    "Explains that with those endpoints present, Claude Desktop / claude.ai web / Claude Code discover OAuth on the upstream and run the flow natively — mcp-remote is no longer needed in the client config.",
+    "Notes DCR is required (Claude clients register dynamically; no static-client UI) and allow_any_on_localhost/allow_any_on_loopback are required for Claude Desktop's http://127.0.0.1:<random-port>/callback.",
+    "Tells the user to verify with `curl https://<host>/.well-known/oauth-authorization-server | jq .` — should return issuer + authorization_endpoint + token_endpoint + registration_endpoint.",
+    "Does NOT recommend writing custom OAuth in the MCP origin.",
+    "Does NOT suggest the Workers OAuth Provider library (that's for origins running ON Workers, not behind Access)."
+  ]
+}

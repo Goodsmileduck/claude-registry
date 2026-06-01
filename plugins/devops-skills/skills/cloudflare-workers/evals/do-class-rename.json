@@ -1,0 +1,14 @@
+{
+  "name": "do-class-rename",
+  "query": "I renamed my Durable Object class from `Counter` to `CounterV2` in code and updated the binding. Deploy fails with 'Cannot apply new-class migration to class \\'CounterV2\\' that is already depended on by existing Durable Objects'. What's going on?",
+  "files": {
+    "wrangler.jsonc": "{\n  \"name\": \"counter-worker\",\n  \"main\": \"src/index.ts\",\n  \"compatibility_date\": \"2025-05-01\",\n  \"durable_objects\": {\n    \"bindings\": [\n      { \"name\": \"COUNTER\", \"class_name\": \"CounterV2\" }\n    ]\n  },\n  \"migrations\": [\n    { \"tag\": \"v1\", \"new_sqlite_classes\": [\"Counter\"] }\n  ]\n}"
+  },
+  "expected_behavior": [
+    "Identifies that the user changed `class_name` without adding a new migration. Cloudflare tracks DO classes by name in its persistence layer; renames are not detected from diff — they must be declared.",
+    "Shows the fix: append a NEW migration entry with a new `tag` (e.g. `v2`) and `renamed_classes`. Snippet: `{ \"tag\": \"v2\", \"renamed_classes\": [{ \"from\": \"Counter\", \"to\": \"CounterV2\" }] }`. Does NOT edit the existing v1 entry — migrations are append-only.",
+    "Explains the broader rule: every class referenced by a binding must appear in the cumulative migration history under one of `new_classes`, `new_sqlite_classes`, or as the `to` side of a `renamed_classes` entry.",
+    "Mentions related migration verbs: `deleted_classes`, `transferred_classes`, and that `new_sqlite_classes` is for the SQLite backend (cannot be downgraded back to KV-backend storage).",
+    "Does NOT suggest deleting the existing DO data, recreating the binding under a different name, or any other destructive shortcut — the rename is supposed to preserve data."
+  ]
+}

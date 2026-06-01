@@ -1,0 +1,15 @@
+{
+  "name": "service-binding-vs-fetch",
+  "query": "Worker A needs to call an internal endpoint on Worker B (`/internal/process`). Both are mine. Should I just have A do `fetch('https://worker-b.example.com/internal/process')`? Feels wrong to send it back through the public internet.",
+  "files": {},
+  "expected_behavior": [
+    "Recommends a Service Binding — Worker A declares a binding to Worker B in `wrangler.jsonc` under `services`, then calls `env.WORKER_B.fetch(request)` or RPC methods. The request stays inside Cloudflare's network, no DNS, no public route exposure required on Worker B.",
+    "Shows the wrangler.jsonc snippet on Worker A: `\"services\": [{ \"binding\": \"WORKER_B\", \"service\": \"worker-b\" }]` (and optionally `\"entrypoint\": \"NamedEntry\"` if Worker B uses a named `WorkerEntrypoint` export).",
+    "Recommends RPC over `fetch()` when both Workers are in the same account and the call is structured: Worker B exports `class extends WorkerEntrypoint { async processItem(id) { ... } }` and Worker A calls `await env.WORKER_B.processItem(id)`. Typed, no HTTP overhead.",
+    "Mentions service bindings work cross-environment: to target Worker B's `production` env specifically, set `\"service\": \"worker-b-production\"` (the deployed worker name reflects the env suffix when `name = worker-b` + env name).",
+    "Mentions that Worker B does NOT need to be publicly routed — it can have no routes and no custom domain and still receive service-binding calls.",
+    "Mentions `wrangler dev` defaults to local bindings; for cross-Worker dev with real Worker B, set `\"remote\": true` on the binding or use `wrangler dev --remote`.",
+    "Mentions Smart Placement (`placement: { mode: 'smart' }`) interacts with service bindings — keep the bound Workers in the same compatibility / placement zone or you pay round-trip cost.",
+    "Does NOT recommend exposing `/internal/process` on a public Worker B route with shared-secret auth as the primary approach. Mentions that pattern only as the fallback when service bindings are not available (e.g. cross-account)."
+  ]
+}

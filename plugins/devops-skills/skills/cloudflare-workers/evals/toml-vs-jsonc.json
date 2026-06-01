@@ -1,0 +1,13 @@
+{
+  "name": "toml-vs-jsonc",
+  "query": "Starting a fresh Worker project. wrangler.toml or wrangler.jsonc? Does it matter?",
+  "files": {},
+  "expected_behavior": [
+    "Recommends `wrangler.jsonc` for new projects. Reasons: it's the default `wrangler init` generates now, supports `$schema` for IDE autocomplete / validation, supports comments (JSONC), and aligns with the format used in current Cloudflare docs.",
+    "Notes that `wrangler.toml` is still fully supported — no urgency to migrate an existing project just because.",
+    "Mentions adding `\"$schema\": \"node_modules/wrangler/config-schema.json\"` (or a CDN URL) at the top of the file so the IDE underlines unknown keys.",
+    "Does NOT claim toml is deprecated — it isn't. Avoids urgency framing.",
+    "Does NOT recommend maintaining both formats in parallel.",
+    "Mentions that the env-override trap (non-inheritable bindings) applies identically to both formats — picking jsonc doesn't save you from that."
+  ]
+}

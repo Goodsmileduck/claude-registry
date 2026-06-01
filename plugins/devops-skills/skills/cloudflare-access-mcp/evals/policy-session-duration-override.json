@@ -1,0 +1,15 @@
+{
+  "name": "policy-session-duration-override",
+  "query": "I set session_duration = '720h' on my Access app for an MCP server because daily re-auth annoys the team. Users still get kicked out after 24h. The dashboard app page shows 720h. What's wrong?",
+  "files": {
+    "main.tf": "resource \"cloudflare_zero_trust_access_application\" \"mcp\" {\n  session_duration = \"720h\"\n  # ...\n}\nresource \"cloudflare_zero_trust_access_policy\" \"mcp_users\" {\n  decision = \"allow\"\n  # session_duration not set\n  include = [{ email_domain = { domain = \"example.com\" } }]\n}\n"
+  },
+  "expected_behavior": [
+    "Identifies the cause: the policy's session_duration overrides the app's. With it omitted on the policy, Cloudflare uses the policy default (24h) regardless of the app setting.",
+    "Fix: set session_duration = \"720h\" on the cloudflare_zero_trust_access_policy too so they match.",
+    "Notes this is silent — Terraform plan shows no warning, the dashboard app tab shows the app's value, only the effective session reveals the override.",
+    "Suggests leaving a code comment so the next person doesn't trip on it.",
+    "Does NOT blame browser cookie expiry or IdP token TTL.",
+    "Does NOT suggest filing a Cloudflare bug."
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "name": "env-override-trap",
+  "query": "My Worker reads from a KV namespace in dev fine, but in production it crashes with 'CACHE is not defined'. Here's my wrangler.jsonc. What's wrong?",
+  "files": {
+    "wrangler.jsonc": "{\n  \"name\": \"my-api\",\n  \"main\": \"src/index.ts\",\n  \"compatibility_date\": \"2025-05-01\",\n  \"kv_namespaces\": [\n    { \"binding\": \"CACHE\", \"id\": \"dev-kv-id\" }\n  ],\n  \"env\": {\n    \"production\": {\n      \"routes\": [\n        { \"pattern\": \"api.example.com/*\", \"zone_name\": \"example.com\" }\n      ]\n    }\n  }\n}"
+  },
+  "expected_behavior": [
+    "Identifies the root cause: bindings (kv_namespaces, durable_objects, r2_buckets, queues, services, vars) are non-inheritable. A populated `env.production` block COMPLETELY OVERRIDES the top-level config for non-inheritable keys; it does NOT merge. Since env.production declares no kv_namespaces, the production deploy has zero KV bindings.",
+    "Calls this out as the #1 Workers footgun, not user error.",
+    "Shows the fix: repeat `kv_namespaces` under `env.production` with the production KV namespace id (different from dev's). Mentions that vars/secrets/queues/r2_buckets/durable_objects all share this rule.",
+    "Optionally suggests the alternate structure: leave the top level free of bindings entirely and define each env under `env.*`, so the trap can't recur.",
+    "Mentions that the validator script flags this exact case.",
+    "Does NOT tell the user to 'check the production KV id is correct' as the primary fix — the binding is missing entirely, not misconfigured."
+  ]
+}

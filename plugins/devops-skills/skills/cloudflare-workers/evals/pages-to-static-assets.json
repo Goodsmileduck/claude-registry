@@ -1,0 +1,18 @@
+{
+  "name": "pages-to-static-assets",
+  "query": "We have a Cloudflare Pages site (Vite SPA) with a Pages Function for /api/*. Friend told me Pages is being deprecated in favor of Workers Static Assets. Should I migrate? How?",
+  "files": {
+    "wrangler.toml": "name = \"my-spa\"\npages_build_output_dir = \"./dist\"\n\n[vars]\nPUBLIC_API_URL = \"https://api.example.com\"\n"
+  },
+  "expected_behavior": [
+    "Confirms the direction: new projects should use Workers with the `[assets]` block; Pages remains supported but Workers + Static Assets is the forward path Cloudflare is investing in, and it unifies SPA + API in one Worker.",
+    "Does NOT push urgent migration on an existing Pages project that's working — the recommendation is to migrate when a meaningful change is happening anyway, not for its own sake.",
+    "Shows the converted `wrangler.jsonc` (or toml) with: `main = \"src/index.ts\"`, `assets = { directory = \"./dist\", binding = \"ASSETS\", not_found_handling = \"single-page-application\" }`, plus a stub Worker entry that delegates to `env.ASSETS.fetch(request)` for non-API paths.",
+    "Explains `not_found_handling` options: `none` (default), `404-page` (for /404.html), `single-page-application` (rewrites unknown paths to /index.html for client-side routing). Picks SPA mode here because the user said Vite SPA.",
+    "Mentions `run_worker_first` (boolean or array of route patterns) for when the Worker needs to intercept requests before the asset server (e.g. auth checks).",
+    "Notes that Pages Functions in `functions/api/*` would be ported into the Worker's fetch handler (or a router library). Doesn't pretend the port is automatic.",
+    "Mentions the deploy command changes from `wrangler pages deploy ./dist` to `wrangler deploy` after building.",
+    "Mentions custom domain attachment differs: Pages domains attach to the Pages project; Workers use `routes` or Custom Domains. Migration needs DNS coordination.",
+    "Does NOT recommend running both Pages and Workers in parallel to 'compare' — they'll fight over the same hostname unless DNS is split."
+  ]
+}
