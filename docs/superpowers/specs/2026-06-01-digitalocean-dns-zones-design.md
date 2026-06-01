@@ -62,7 +62,11 @@ CLAUDE.md, re-read and update both fields whenever a skill is later added.
    migrating a zone from Cloudflare (which flattens apex CNAMEs transparently).
 4. **List-then-act for idempotency.** Like CF, there is no upsert-by-name.
    Look the record up by name+type, then create or update by ID.
-5. **TTL floor is 30s.** Values below 30 are rejected/clamped.
+5. **CNAME/MX values are FQDNs with a trailing dot.** `value = "mail.example.com."`
+   — without the trailing dot the DO provider treats the value as relative and
+   appends the domain. (Verified against the provider docs, which show every
+   CNAME/MX value dotted. Note: `ttl` is *not* floored at 30 — the provider
+   documents `ttl >= 0`, default 1800; do not assert a 30s minimum.)
 
 ### Routed content
 
@@ -88,13 +92,15 @@ Python 3 stdlib only. `--help`, exit 0 on pass / non-zero on findings,
 (regex/line scan — no HCL lib available in stdlib; documented as a heuristic
 linter, not a full HCL parser) and flags:
 
-- CNAME at apex: a block with `type = "CNAME"` and `name = "@"`.
-- CNAME `value` missing a trailing dot (`.`).
-- `ttl` present and `< 30`.
+- CNAME at apex (error): a block with `type = "CNAME"` and `name = "@"` — DO has
+  no apex CNAME/flattening; the zone will break.
+- CNAME/MX `value` missing a trailing dot (warning): relative-vs-FQDN ambiguity
+  in the DO provider.
 
-Each threshold justified by an inline comment (30s = DO's documented TTL floor;
-trailing dot = FQDN vs relative-name ambiguity in the DO provider). No voodoo
-constants.
+Dropped the earlier `ttl < 30` check: the provider documents `ttl >= 0`
+(default 1800), so a sub-30 TTL is not a provider-level error and flagging it
+would be a false positive. Every remaining rule is justified by an inline
+comment citing the provider docs. No voodoo constants.
 
 ### Evals (written first)
 
