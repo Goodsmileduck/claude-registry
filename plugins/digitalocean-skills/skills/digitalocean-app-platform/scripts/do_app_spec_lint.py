@@ -1,0 +1,198 @@
+#!/usr/bin/env python3
+"""Linter for DigitalOcean App Platform app specs.
+
+Accepts three input formats, all normalized to one canonical dict before
+checks run:
+
+  - JSON (primary): output of `doctl apps spec get --format json` or the API
+    app `spec` object. Parsed with the stdlib json module.
+  - Block-YAML subset (fallback): the indent-based YAML DigitalOcean emits in
+    `.do/app.yaml`. NOT a full YAML parser — anchors, flow collections, and
+    folded/literal block scalars are rejected with a clear error directing the
+    user to pass JSON.
+  - Terraform: `resource "digitalocean_app"` -> `spec { ... }`, via a small
+    HCL block parser.
+
+Checks (rule ids): secret-not-encrypted, secret-build-scope, no-health-check,
+single-instance, dev-db-as-prod, port-mismatch, route-overlap, source-conflict,
+deprecated-routes, unknown-instance-slug, db-region-mismatch.
+
+Exit codes: 0 = clean (or warnings only), 1 = at least one error-severity
+finding, 2 = usage/IO/parse error.
+"""
+import argparse
+import json
+import sys
+
+COMPONENT_KINDS = ("services", "workers", "jobs", "functions", "static_sites")
+# Component kinds that serve HTTP traffic and so warrant health-check / scaling
+# checks. Jobs and functions are excluded (no long-running listener).
+HTTP_KINDS = ("service", "worker", "static_site")
+
+
+def _as_list(val):
+    if val is None:
+        return []
+    return val if isinstance(val, list) else [val]
+
+
+def _norm_env(e):
+    return {
+        "key": e.get("key"),
+        "value": e.get("value"),
+        "type": e.get("type"),
+        "scope": e.get("scope"),
+    }
+
+
+def _norm_component(raw, kind_plural):
+    kind = kind_plural.rstrip("s") if kind_plural != "static_sites" else "static_site"
+    hc = raw.get("health_check")
+    health = None
+    if isinstance(hc, dict):
+        health = {"http_path": hc.get("http_path"), "port": hc.get("port")}
+    return {
+        "kind": kind,
+        "name": raw.get("name"),
+        "instance_count": raw.get("instance_count"),
+        "instance_size_slug": raw.get("instance_size_slug"),
+        "http_port": raw.get("http_port"),
+        "autoscaling": raw.get("autoscaling") if isinstance(raw.get("autoscaling"), dict) else None,
+        "health_check": health,
+        "has_git": any(raw.get(k) for k in ("git", "github", "gitlab")),
+        "has_image": bool(raw.get("image")),
+        "routes": [{"path": r.get("path")} for r in _as_list(raw.get("routes")) if isinstance(r, dict)],
+        "envs": [_norm_env(e) for e in _as_list(raw.get("envs")) if isinstance(e, dict)],
+    }
+
+
+def _norm_ingress(raw):
+    rules = []
+    ingress = raw.get("ingress")
+    if isinstance(ingress, dict):
+        for rule in _as_list(ingress.get("rules")):
+            if not isinstance(rule, dict):
+                continue
+            match = rule.get("match") or {}
+            path = match.get("path") or {}
+            comp = rule.get("component") or {}
+            rules.append({"prefix": path.get("prefix"), "component": comp.get("name")})
+    return {"rules": rules}
+
+
+def _norm_database(d):
+    return {
+        "name": d.get("name"),
+        "production": d.get("production"),
+        "region": d.get("region"),
+    }
+
+
+def _normalize(raw):
+    """Turn a raw spec dict (JSON/YAML/HCL origin) into the canonical shape."""
+    if not isinstance(raw, dict):
+        raise ValueError("spec root must be a mapping")
+    # A spec may be wrapped as {"spec": {...}} (API response) — unwrap it.
+    if "spec" in raw and isinstance(raw["spec"], dict) and not any(
+            k in raw for k in COMPONENT_KINDS):
+        raw = raw["spec"]
+    components = []
+    for plural in COMPONENT_KINDS:
+        for c in _as_list(raw.get(plural)):
+            if isinstance(c, dict):
+                components.append(_norm_component(c, plural))
+    return {
+        "name": raw.get("name"),
+        "region": raw.get("region"),
+        "envs": [_norm_env(e) for e in _as_list(raw.get("envs")) if isinstance(e, dict)],
+        "ingress": _norm_ingress(raw),
+        "databases": [_norm_database(d) for d in _as_list(raw.get("databases")) if isinstance(d, dict)],
+        "components": components,
+    }
+
+
+# --- check registry -------------------------------------------------------
+# Each check: (normalized_spec) -> list[Finding]. Registered in CHECKS.
+CHECKS = []
+
+
+def check(fn):
+    CHECKS.append(fn)
+    return fn
+
+
+def lint_spec(norm):
+    findings = []
+    for fn in CHECKS:
+        findings.extend(fn(norm))
+    return findings
+
+
+# --- input dispatch -------------------------------------------------------
+
+def load_spec(text, path):
+    """Parse raw text (format auto-detected) into a normalized spec."""
+    stripped = text.lstrip()
+    if path.endswith(".tf") or 'resource "digitalocean_app"' in text:
+        raw = parse_hcl_app(text)            # Task 7
+    elif stripped.startswith("{"):
+        raw = json.loads(text)
+    else:
+        raw = parse_yaml_subset(text)        # Task 6
+    return _normalize(raw)
+
+
+# --- reporter -------------------------------------------------------------
+
+def _format_text(findings):
+    lines = []
+    for f in findings:
+        comp = f"({f['component']}) " if f.get("component") else ""
+        lines.append(f"[{f['severity'].upper()}] {f['rule']} {comp}{f['message']}")
+        if f.get("fix"):
+            lines.append(f"    fix: {f['fix']}")
+    return "\n".join(lines)
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(
+        description="Lint DigitalOcean App Platform app specs (JSON, YAML subset, or Terraform).")
+    parser.add_argument("paths", nargs="+", help="app spec files (.json/.yaml/.yml/.tf)")
+    parser.add_argument("--format", choices=("text", "json"), default="text",
+                        help="output format (default: text)")
+    args = parser.parse_args(argv)
+
+    all_findings = []
+    for path in args.paths:
+        try:
+            with open(path, "r", encoding="utf-8") as fh:
+                text = fh.read()
+        except OSError as exc:
+            print(f"error: cannot read {path}: {exc}", file=sys.stderr)
+            return 2
+        try:
+            norm = load_spec(text, path)
+        except (ValueError, json.JSONDecodeError) as exc:
+            print(f"error: cannot parse {path}: {exc}", file=sys.stderr)
+            return 2
+        for f in lint_spec(norm):
+            all_findings.append(dict(f, file=path))
+
+    if args.format == "json":
+        print(json.dumps(all_findings, indent=2))
+    elif all_findings:
+        print(_format_text(all_findings))
+
+    return 1 if any(f["severity"] == "error" for f in all_findings) else 0
+
+
+def parse_yaml_subset(text):  # replaced in Task 6
+    raise ValueError("YAML parsing not yet implemented; pass JSON")
+
+
+def parse_hcl_app(text):  # replaced in Task 7
+    raise ValueError("Terraform parsing not yet implemented; pass JSON")
+
+
+if __name__ == "__main__":
+    sys.exit(main())
