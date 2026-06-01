@@ -1,0 +1,5 @@
+{
+  "query": "I'm moving example.com from Cloudflare to DigitalOcean. On Cloudflare the apex was a CNAME to my load balancer hostname. How do I recreate that on DO?",
+  "files": [],
+  "expected_behavior": "Warns that DigitalOcean has no apex CNAME and no CNAME flattening (unlike Cloudflare). Recommends resolving the LB hostname to an IP and using an A/AAAA record at name \"@\", or using a DO-native resource that exposes an IP. Does NOT suggest a CNAME at the apex."
+}

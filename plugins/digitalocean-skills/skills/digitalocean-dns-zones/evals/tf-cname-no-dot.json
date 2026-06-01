@@ -1,0 +1,5 @@
+{
+  "query": "Why does my Terraform CNAME on DigitalOcean resolve to api.example.com.example.com?",
+  "files": ["main.tf"],
+  "expected_behavior": "Identifies the missing trailing dot on the digitalocean_record CNAME value: a relative value like \"www.example.com\" gets the domain appended, producing a doubled FQDN. Fix is value = \"www.example.com.\". The do_dns_tf_lint.py validator flags this case."
+}

@@ -1,0 +1,5 @@
+{
+  "query": "I need a wildcard TLS cert for *.example.com and the zone is hosted on DigitalOcean DNS. How do I get it issued automatically?",
+  "files": [],
+  "expected_behavior": "Routes to a DNS-01 ACME challenge using DigitalOcean DNS. Mentions cert-manager's DigitalOcean DNS solver (tokenSecretRef) or lego/acme.sh with a DigitalOcean API token in the environment. Notes the token is account-wide and must be stored as a secret, not inlined."
+}
