@@ -6,8 +6,8 @@
     "name": "Stanislav Serebrennikov",
     "url": "https://github.com/Goodsmileduck"
   },
-  "homepage": "https://github.com/Goodsmileduck/goodsmileduck-claude-registry",
-  "repository": "https://github.com/Goodsmileduck/goodsmileduck-claude-registry",
+  "homepage": "https://github.com/Goodsmileduck/claude-registry",
+  "repository": "https://github.com/Goodsmileduck/claude-registry",
   "license": "MIT",
   "keywords": [
     "claude-md",

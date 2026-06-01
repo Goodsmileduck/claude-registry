@@ -1,0 +1,12 @@
+{
+  "name": "flag-conventions",
+  "query": "I'm writing a script that uses `cf`. I want to (a) suppress the interactive confirmation prompt when deleting, (b) get JSON output for parsing, and (c) target the local simulated resource. What are the exact flag names? My old wrangler script used `--skip-confirmations`, `--format=json`, and `--preview`.",
+  "files": {},
+  "expected_behavior": [
+    "Maps each requested behavior to the `cf` convention: (a) `--force` for non-interactive (NOT `--skip-confirmations`, NOT `--yes`), (b) `--json` for JSON output (NOT `--format=json`, NOT `--output=json`), (c) `--local` to target simulated resources (NOT `--preview`, NOT `--env=local`).",
+    "Explains why and how to stay current: `cf` enforces consistent flags across every command so one mental model covers ~3000 ops, but conventions are still firming up during preview — verify with `cf <command> --help` rather than memorizing, and pin the `cf` version in scripts.",
+    "Mentions that `--json` is intended to be supported across all commands, but the preview may not cover every command yet — fall back to remote API + jq for anything not yet implemented in `cf`.",
+    "Does NOT invent flag names that aren't in the published convention list (e.g. `--quiet`, `--no-prompt`, `--yes` — none of these are the documented `cf` choice; the documented one is `--force`).",
+    "Does NOT recommend the unofficial `cfcli` package, which uses different conventions and a different config file (`~/.cfcli.yml`)."
+  ]
+}

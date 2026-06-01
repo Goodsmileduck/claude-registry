@@ -1,0 +1,15 @@
+{
+  "name": "local-vs-remote-footgun",
+  "query": "I ran `cf kv put session:abc '{...}'` from my dev machine to seed a test value while `wrangler dev` was running. Now production users are seeing that test payload. What happened and how do I prevent this?",
+  "files": {
+    "wrangler.jsonc": "{\n  \"name\": \"my-worker\",\n  \"main\": \"src/index.ts\",\n  \"compatibility_date\": \"2026-04-01\",\n  \"kv_namespaces\": [\n    { \"binding\": \"SESSIONS\", \"id\": \"abc123prod\", \"preview_id\": \"def456local\" }\n  ]\n}\n"
+  },
+  "expected_behavior": [
+    "Identifies the root cause: `cf` defaults to the REMOTE resource — without `--local` the write hit the production namespace `abc123prod` instead of the simulated one `wrangler dev` / Local Explorer expose.",
+    "Recommends the immediate fix: delete the bad key against the remote namespace (`cf kv delete session:abc` — no `--local`, since you ARE targeting prod), then re-seed with `--local`.",
+    "Recommends guardrails: use a separate API token for local-dev work that is scoped to a non-prod account or has Write disabled on prod namespaces; or rely on Local Explorer (`/cdn-cgi/explorer/api`, opens with `e` in the dev terminal) for seeding, which is local-only by construction.",
+    "Notes that wrangler had the same trap historically (`wrangler kv key put` defaulted to remote unless `--local` / `--preview` was passed). `cf` inherits this default by design — it is not a bug.",
+    "Does NOT suggest that `cf` has a global config flag to switch the default to local — there isn't one in the preview; `--local` is per-invocation.",
+    "Does NOT confuse `preview_id` (used by `wrangler dev --remote=false` historically) with Local Explorer's simulated storage; both exist, but Local Explorer is the current path."
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "name": "preview-readiness-for-ci",
+  "query": "We're standardizing our Cloudflare deploys. Can we replace `wrangler deploy` and `wrangler kv key put` in our GitHub Actions workflow with the new `cf` CLI today?",
+  "files": {
+    ".github/workflows/deploy.yml": "name: deploy\non: push\njobs:\n  deploy:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - run: npm ci\n      - run: npx wrangler deploy\n        env:\n          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_TOKEN }}\n      - run: npx wrangler kv key put --binding=CONFIG release_id $GITHUB_SHA\n        env:\n          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_TOKEN }}\n"
+  },
+  "expected_behavior": [
+    "Answers NO — `cf` is a technical preview (announced April 2026) covering only a small subset of products; Wrangler stays authoritative for CI/CD until `cf` reaches GA.",
+    "Explains that `cf` is being grown into the next major version of Wrangler — same `wrangler.jsonc` config, eventually unified tool. So the migration is forward-compatible later, but not urgent.",
+    "Suggests low-risk ways to start trying it locally (`npx cf` for ad-hoc exploration, or pointing an agent at the Local Explorer OpenAPI for local-dev introspection) without touching the production workflow.",
+    "If the user insists on early adoption: pin the exact version (`npm install -g cf@<version>` or `npx cf@<version>`), keep wrangler in the workflow as a fallback, and never use unpinned `npx cf` in CI because preview-tool semantics can shift between releases.",
+    "Does NOT recommend rewriting the workflow today.",
+    "Does NOT confuse `cf` with the unofficial `cloudflare-cli` (`cfcli`) npm package or with `c3` / `create-cloudflare` (project scaffolder)."
+  ]
+}

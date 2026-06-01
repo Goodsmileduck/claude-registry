@@ -1,4 +1,5 @@
 {
+  "$schema": "https://code.claude.com/schemas/marketplace.json",
   "name": "claude-registry",
   "owner": {
     "name": "Stanislav Serebrennikov",
@@ -9,7 +10,7 @@
       "name": "claude-md-optimizer",
       "source": {
         "source": "github",
-        "repo": "Goodsmileduck/goodsmileduck-claude-registry"
+        "repo": "Goodsmileduck/claude-registry"
       },
       "description": "Analyzes and optimizes CLAUDE.md files following Anthropic's official best practices. Use when reviewing existing CLAUDE.md for improvements, or when user mentions CLAUDE.md is too long or ineffective.",
       "version": "1.0.0",
@@ -17,8 +18,8 @@
         "name": "Stanislav Serebrennikov",
         "url": "https://github.com/Goodsmileduck"
       },
-      "homepage": "https://github.com/Goodsmileduck/goodsmileduck-claude-registry",
-      "repository": "https://github.com/Goodsmileduck/goodsmileduck-claude-registry",
+      "homepage": "https://github.com/Goodsmileduck/claude-registry",
+      "repository": "https://github.com/Goodsmileduck/claude-registry",
       "license": "MIT",
       "keywords": [
         "claude-md",
@@ -35,7 +36,7 @@
       "name": "mindfulness-mentor",
       "source": {
         "source": "github",
-        "repo": "Goodsmileduck/goodsmileduck-claude-registry"
+        "repo": "Goodsmileduck/claude-registry"
       },
       "description": "Guides developers through mindfulness exercises and stress-reduction techniques. Use when taking a break, feeling overwhelmed, debugging frustration, or needing to refocus during a coding session.",
       "version": "1.0.0",
@@ -43,8 +44,8 @@
         "name": "Stanislav Serebrennikov",
         "url": "https://github.com/Goodsmileduck"
       },
-      "homepage": "https://github.com/Goodsmileduck/goodsmileduck-claude-registry",
-      "repository": "https://github.com/Goodsmileduck/goodsmileduck-claude-registry",
+      "homepage": "https://github.com/Goodsmileduck/claude-registry",
+      "repository": "https://github.com/Goodsmileduck/claude-registry",
       "license": "MIT",
       "keywords": [
         "mindfulness",
@@ -62,7 +63,7 @@
       "name": "do-registry-cleanup",
       "source": {
         "source": "github",
-        "repo": "Goodsmileduck/goodsmileduck-claude-registry"
+        "repo": "Goodsmileduck/claude-registry"
       },
       "description": "Analyze and clean DigitalOcean Container Registry images. Lists repos with tag counts, deletes old tags (keep last N), finds stale repos, triggers garbage collection. Supports dry-run mode.",
       "version": "1.0.0",
@@ -70,8 +71,8 @@
         "name": "Stanislav Serebrennikov",
         "url": "https://github.com/Goodsmileduck"
       },
-      "homepage": "https://github.com/Goodsmileduck/goodsmileduck-claude-registry",
-      "repository": "https://github.com/Goodsmileduck/goodsmileduck-claude-registry",
+      "homepage": "https://github.com/Goodsmileduck/claude-registry",
+      "repository": "https://github.com/Goodsmileduck/claude-registry",
       "license": "MIT",
       "keywords": [
         "digitalocean",
@@ -83,6 +84,123 @@
         "doctl"
       ],
       "category": "devops"
+    },
+    {
+      "name": "devops-skills",
+      "source": {
+        "source": "github",
+        "repo": "Goodsmileduck/claude-registry"
+      },
+      "description": "Multi-cloud DevOps workflows across 13 skills: Terraform/OpenTofu plan review and state surgery, Terragrunt CLI redesign and stacks, Kubernetes day-to-day operations, Kubernetes Operators (CRD/reconcile/OperatorHub), Docker workflows, ArgoCD ApplicationSets and GitOps posture, GCP IAM inheritance and impersonation, S3-compatible storage identification, GitHub Actions OIDC and reusable workflows, Cloudflare DNS zones (REST), Cloudflare `cf` unified CLI (preview), AWS CodePipeline + CodeBuild, AWS cost investigation (Cost Explorer + CUR). Covers AWS, GCP, DigitalOcean, Azure, Cloudflare.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Stanislav Serebrennikov",
+        "url": "https://github.com/Goodsmileduck"
+      },
+      "homepage": "https://github.com/Goodsmileduck/claude-registry",
+      "repository": "https://github.com/Goodsmileduck/claude-registry",
+      "license": "MIT",
+      "keywords": [
+        "devops",
+        "terraform",
+        "opentofu",
+        "terragrunt",
+        "kubernetes",
+        "docker",
+        "argocd",
+        "gitops",
+        "gcp",
+        "aws",
+        "cloudflare",
+        "github-actions",
+        "cf-cli",
+        "wrangler",
+        "iac",
+        "ci-cd",
+        "oidc",
+        "finops"
+      ],
+      "category": "devops"
+    },
+    {
+      "name": "setup-project-skills",
+      "source": {
+        "source": "github",
+        "repo": "Goodsmileduck/claude-registry"
+      },
+      "description": "Installs skills from a user-curated manifest (~/.claude/skill-manifest.json) into the current project's .claude/skills/ — symlinks local skills, runs `npx skills add` for third-party ones, and advises `/plugin install` for native Claude plugins. Optionally scans the project for trigger files and pre-selects recommended matches. Ships a starter manifest as skill-manifest.example.json.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Stanislav Serebrennikov",
+        "url": "https://github.com/Goodsmileduck"
+      },
+      "homepage": "https://github.com/Goodsmileduck/claude-registry",
+      "repository": "https://github.com/Goodsmileduck/claude-registry",
+      "license": "MIT",
+      "keywords": [
+        "skill-management",
+        "skill-installer",
+        "bootstrap",
+        "manifest",
+        "project-setup",
+        "claude-code"
+      ],
+      "category": "productivity"
+    },
+    {
+      "name": "cloudflare",
+      "source": {
+        "source": "github",
+        "repo": "cloudflare/skills"
+      },
+      "description": "Curated upstream: Cloudflare's official platform skills — Workers, Pages, KV/D1/R2, Workers AI, Vectorize, Agents SDK, Tunnel, Spectrum, WAF, DDoS, Terraform, Pulumi. Includes the wrangler, agents-sdk, durable-objects, sandbox-sdk, web-perf, building-mcp-server-on-cloudflare, building-ai-agent-on-cloudflare, and cloudflare-email-service skills.",
+      "author": {
+        "name": "Cloudflare",
+        "url": "https://workers.cloudflare.com"
+      },
+      "homepage": "https://github.com/cloudflare/skills",
+      "repository": "https://github.com/cloudflare/skills",
+      "license": "See upstream",
+      "keywords": [
+        "cloudflare",
+        "workers",
+        "pages",
+        "kv",
+        "d1",
+        "r2",
+        "wrangler",
+        "agents-sdk",
+        "durable-objects",
+        "mcp",
+        "upstream"
+      ],
+      "category": "devops"
+    },
+    {
+      "name": "vercel-react-skills",
+      "source": {
+        "source": "github",
+        "repo": "vercel-labs/skills"
+      },
+      "description": "Curated upstream: Vercel-Labs React/Next.js skills — performance best practices, composition patterns (compound components, render props), and React Native / Expo conventions for mobile.",
+      "author": {
+        "name": "Vercel Labs",
+        "url": "https://vercel.com"
+      },
+      "homepage": "https://github.com/vercel-labs/skills",
+      "repository": "https://github.com/vercel-labs/skills",
+      "license": "See upstream",
+      "keywords": [
+        "react",
+        "nextjs",
+        "react-native",
+        "expo",
+        "performance",
+        "composition-patterns",
+        "frontend",
+        "upstream"
+      ],
+      "category": "frontend"
     }
   ]
 }

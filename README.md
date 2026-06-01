@@ -1,9 +1,9 @@
 # Claude Registry - Community Plugin Marketplace
 
-[![GitHub stars](https://img.shields.io/github/stars/Goodsmileduck/goodsmileduck-claude-registry?style=social)](https://github.com/Goodsmileduck/goodsmileduck-claude-registry)
-[![GitHub forks](https://img.shields.io/github/forks/Goodsmileduck/goodsmileduck-claude-registry?style=social)](https://github.com/Goodsmileduck/goodsmileduck-claude-registry/fork)
-[![GitHub issues](https://img.shields.io/github/issues/Goodsmileduck/goodsmileduck-claude-registry)](https://github.com/Goodsmileduck/goodsmileduck-claude-registry/issues)
-[![GitHub last commit](https://img.shields.io/github/last-commit/Goodsmileduck/goodsmileduck-claude-registry)](https://github.com/Goodsmileduck/goodsmileduck-claude-registry/commits/main)
+[![GitHub stars](https://img.shields.io/github/stars/Goodsmileduck/claude-registry?style=social)](https://github.com/Goodsmileduck/claude-registry)
+[![GitHub forks](https://img.shields.io/github/forks/Goodsmileduck/claude-registry?style=social)](https://github.com/Goodsmileduck/claude-registry/fork)
+[![GitHub issues](https://img.shields.io/github/issues/Goodsmileduck/claude-registry)](https://github.com/Goodsmileduck/claude-registry/issues)
+[![GitHub last commit](https://img.shields.io/github/last-commit/Goodsmileduck/claude-registry)](https://github.com/Goodsmileduck/claude-registry/commits/main)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-Compatible-blueviolet)](https://claude.ai/code)
 
@@ -41,7 +41,7 @@ Add this marketplace to Claude Code and start installing plugins:
 
 ```bash
 # Add the marketplace
-/plugin marketplace add Goodsmileduck/goodsmileduck-claude-registry
+/plugin marketplace add Goodsmileduck/claude-registry
 
 # Install any plugin
 /plugin install claude-md-optimizer@claude-registry
@@ -101,7 +101,7 @@ Analyze and clean DigitalOcean Container Registry images. Requires `doctl` CLI.
 Add the marketplace to access all plugins:
 
 ```bash
-/plugin marketplace add Goodsmileduck/goodsmileduck-claude-registry
+/plugin marketplace add Goodsmileduck/claude-registry
 ```
 
 Then install any plugin from the registry:
@@ -116,7 +116,7 @@ For development or offline use:
 
 ```bash
 # Clone the repository
-git clone https://github.com/Goodsmileduck/goodsmileduck-claude-registry.git
+git clone https://github.com/Goodsmileduck/claude-registry.git
 
 # Add marketplace from local path
 /plugin marketplace add /path/to/claude-registry
@@ -181,4 +181,4 @@ MIT License
 
 **Found this useful?** Star the repo and help others discover Claude Code plugins!
 
-[![Star this repo](https://img.shields.io/github/stars/Goodsmileduck/goodsmileduck-claude-registry?style=social)](https://github.com/Goodsmileduck/goodsmileduck-claude-registry)
+[![Star this repo](https://img.shields.io/github/stars/Goodsmileduck/claude-registry?style=social)](https://github.com/Goodsmileduck/claude-registry)

@@ -1,0 +1,150 @@
+{
+  "$comment": "Curated skill catalog for setup-project-skills. Hand-edit to add/remove. Source types: local-symlink | npx-skills | claude-plugin. `detect` is a list of glob/grep hints used to flag a skill as recommended for the current project.",
+  "version": 1,
+  "skills": [
+    {
+      "name": "terraform-workflows",
+      "source": "local-symlink",
+      "path": "~/local/personal/claude-registry/plugins/devops-skills/skills/terraform-workflows",
+      "tags": ["terraform", "opentofu", "iac"],
+      "detect": ["**/*.tf", "**/*.tofu", "**/terraform.tfvars*"]
+    },
+    {
+      "name": "terragrunt-workflows",
+      "source": "local-symlink",
+      "path": "~/local/personal/claude-registry/plugins/devops-skills/skills/terragrunt-workflows",
+      "tags": ["terragrunt", "iac"],
+      "detect": ["**/terragrunt.hcl", "**/root.hcl"]
+    },
+    {
+      "name": "kubernetes-operations",
+      "source": "local-symlink",
+      "path": "~/local/personal/claude-registry/plugins/devops-skills/skills/kubernetes-operations",
+      "tags": ["kubernetes", "k8s"],
+      "detect": ["**/kustomization.{yaml,yml}", "**/Chart.yaml", "**/*.k8s.{yaml,yml}", "kubeconfig"]
+    },
+    {
+      "name": "kubernetes-operators",
+      "source": "local-symlink",
+      "path": "~/local/personal/claude-registry/plugins/devops-skills/skills/kubernetes-operators",
+      "tags": ["kubernetes", "operator", "crd", "controller-runtime"],
+      "detect": ["**/PROJECT", "**/api/v*/*_types.go", "**/config/crd/**"]
+    },
+    {
+      "name": "docker-workflows",
+      "source": "local-symlink",
+      "path": "~/local/personal/claude-registry/plugins/devops-skills/skills/docker-workflows",
+      "tags": ["docker", "containers"],
+      "detect": ["Dockerfile", "**/Dockerfile*", "docker-compose.{yaml,yml}", "compose.{yaml,yml}"]
+    },
+    {
+      "name": "argocd-operations",
+      "source": "local-symlink",
+      "path": "~/local/personal/claude-registry/plugins/devops-skills/skills/argocd-operations",
+      "tags": ["argocd", "gitops"],
+      "detect": ["**/argocd/**", "**/Application.yaml", "**/ApplicationSet.yaml"]
+    },
+    {
+      "name": "gcp-iam",
+      "source": "local-symlink",
+      "path": "~/local/personal/claude-registry/plugins/devops-skills/skills/gcp-iam",
+      "tags": ["gcp", "iam"],
+      "detect": ["**/*.tf:google_", "gcloud", "**/service-account*.json"]
+    },
+    {
+      "name": "cloud-storage-identification",
+      "source": "local-symlink",
+      "path": "~/local/personal/claude-registry/plugins/devops-skills/skills/cloud-storage-identification",
+      "tags": ["s3", "r2", "gcs", "object-storage"],
+      "detect": ["**/*.tf:aws_s3_bucket", "**/*.tf:google_storage_bucket", "**/*.tf:cloudflare_r2_bucket"]
+    },
+    {
+      "name": "github-actions-pipelines",
+      "source": "local-symlink",
+      "path": "~/local/personal/claude-registry/plugins/devops-skills/skills/github-actions-pipelines",
+      "tags": ["github-actions", "ci-cd"],
+      "detect": [".github/workflows/*.{yml,yaml}"]
+    },
+    {
+      "name": "cloudflare-dns-zones",
+      "source": "local-symlink",
+      "path": "~/local/personal/claude-registry/plugins/devops-skills/skills/cloudflare-dns-zones",
+      "tags": ["cloudflare", "dns"],
+      "detect": ["**/*.tf:cloudflare_record", "**/*.tf:cloudflare_zone"]
+    },
+    {
+      "name": "cloudflare-cf-cli",
+      "source": "local-symlink",
+      "path": "~/local/personal/claude-registry/plugins/devops-skills/skills/cloudflare-cf-cli",
+      "tags": ["cloudflare", "workers", "cf-cli"],
+      "detect": ["wrangler.{json,jsonc,toml}", "**/workers.{js,ts}", "**/.dev.vars"]
+    },
+    {
+      "name": "aws-codepipeline-codebuild",
+      "source": "local-symlink",
+      "path": "~/local/personal/claude-registry/plugins/devops-skills/skills/aws-codepipeline-codebuild",
+      "tags": ["aws", "ci-cd"],
+      "detect": ["buildspec.{yml,yaml}", "**/*.tf:aws_codepipeline", "**/*.tf:aws_codebuild_project"]
+    },
+    {
+      "name": "aws-cost-investigation",
+      "source": "local-symlink",
+      "path": "~/local/personal/claude-registry/plugins/devops-skills/skills/aws-cost-investigation",
+      "tags": ["aws", "finops"],
+      "detect": ["**/cost-explorer*", "**/cur-*", "**/billing*"]
+    },
+
+    {
+      "name": "cloudflare-umbrella",
+      "source": "claude-plugin",
+      "plugin": "cloudflare@cloudflare",
+      "tags": ["cloudflare", "workers", "pages", "kv", "d1", "r2"],
+      "detect": ["wrangler.{json,jsonc,toml}", "**/workers.{js,ts}", "**/.dev.vars"],
+      "note": "Run /plugin install cloudflare@cloudflare yourself — Claude Code can't trigger slash commands. Includes wrangler, agents-sdk, durable-objects, workers, etc."
+    },
+
+    {
+      "name": "wrangler",
+      "source": "npx-skills",
+      "repo": "cloudflare/skills/wrangler",
+      "tags": ["cloudflare", "wrangler"],
+      "detect": ["wrangler.{json,jsonc,toml}"]
+    },
+    {
+      "name": "agents-sdk",
+      "source": "npx-skills",
+      "repo": "cloudflare/skills/agents-sdk",
+      "tags": ["cloudflare", "agents", "ai"],
+      "detect": ["**/agents*.{ts,js}", "**/durable-object*.{ts,js}"]
+    },
+    {
+      "name": "durable-objects",
+      "source": "npx-skills",
+      "repo": "cloudflare/skills/durable-objects",
+      "tags": ["cloudflare", "durable-objects"],
+      "detect": ["wrangler.{json,jsonc,toml}:durable_objects"]
+    },
+
+    {
+      "name": "vercel-react-best-practices",
+      "source": "npx-skills",
+      "repo": "vercel-labs/skills/vercel-react-best-practices",
+      "tags": ["react", "nextjs"],
+      "detect": ["next.config.{js,mjs,ts}", "package.json:\"react\""]
+    },
+    {
+      "name": "vercel-composition-patterns",
+      "source": "npx-skills",
+      "repo": "vercel-labs/skills/vercel-composition-patterns",
+      "tags": ["react", "patterns"],
+      "detect": ["package.json:\"react\""]
+    },
+    {
+      "name": "vercel-react-native-skills",
+      "source": "npx-skills",
+      "repo": "vercel-labs/skills/vercel-react-native-skills",
+      "tags": ["react-native", "expo", "mobile"],
+      "detect": ["app.json:expo", "package.json:\"react-native\""]
+    }
+  ]
+}

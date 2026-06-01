@@ -1,0 +1,23 @@
+{
+  "name": "setup-project-skills",
+  "version": "0.1.0",
+  "description": "Installs skills from a user-curated manifest (~/.claude/skill-manifest.json) into the current project's .claude/skills/ directory. Symlinks local skills, runs `npx skills add` for third-party ones, and advises `/plugin install` for native Claude plugins. Optionally scans the project for trigger files (Dockerfile, wrangler.jsonc, *.tf, etc.) and pre-selects recommended matches. Ships a starter manifest at skill-manifest.example.json.",
+  "author": {
+    "name": "Stanislav Serebrennikov",
+    "url": "https://github.com/Goodsmileduck"
+  },
+  "homepage": "https://github.com/Goodsmileduck/claude-registry",
+  "repository": "https://github.com/Goodsmileduck/claude-registry",
+  "license": "MIT",
+  "keywords": [
+    "skill-management",
+    "skill-installer",
+    "bootstrap",
+    "manifest",
+    "project-setup",
+    "claude-code",
+    "symlink",
+    "npx-skills",
+    "productivity"
+  ]
+}
