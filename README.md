@@ -97,7 +97,9 @@ Analyze and clean DigitalOcean Container Registry images. Requires `doctl` CLI.
 
 ### digitalocean-skills
 
-DigitalOcean operations skills. First skill: `digitalocean-dns-zones` — managing DNS via `doctl`, the DigitalOcean API v2, and the `digitalocean` Terraform provider.
+DigitalOcean operations skills. Two skills: `digitalocean-dns-zones` (DNS management) and `digitalocean-app-platform` (App Platform spec linter).
+
+**`digitalocean-dns-zones`** — managing DNS via `doctl`, the DigitalOcean API v2, and the `digitalocean` Terraform provider.
 
 | Feature | Description |
 |---------|-------------|
@@ -107,12 +109,21 @@ DigitalOcean operations skills. First skill: `digitalocean-dns-zones` — managi
 | **Wildcard certs** | DNS-01 ACME via cert-manager's DO solver or lego/acme.sh |
 | **Delegation** | Nameserver setup and record-by-record zone migration |
 
+**`digitalocean-app-platform`** — lints App Platform app specs (`app.yaml`, `doctl apps spec` JSON, `digitalocean_app` Terraform).
+
+| Feature | Description |
+|---------|-------------|
+| **Secret checks** | Flags plaintext secrets in env values; warns on build-scoped secrets |
+| **Reliability checks** | Detects single-instance services, missing health checks, dev databases in production |
+| **Correctness checks** | Port mismatches, overlapping ingress routes, conflicting git/image sources, deprecated routes |
+| **Sizing checks** | Unknown instance size slugs, app/database region mismatch |
+
 **Install:**
 ```bash
 /plugin install digitalocean-skills@claude-registry
 ```
 
-**Triggers:** "DigitalOcean DNS", "doctl domain records", "digitalocean_record", "apex CNAME on DO", "wildcard cert DigitalOcean"
+**Triggers:** "DigitalOcean DNS", "doctl domain records", "digitalocean_record", "apex CNAME on DO", "wildcard cert DigitalOcean", "DigitalOcean App Platform", "app.yaml", "doctl apps", "digitalocean_app", "app spec lint"
 
 ---
 

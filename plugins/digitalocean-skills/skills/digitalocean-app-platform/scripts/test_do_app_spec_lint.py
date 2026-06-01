@@ -64,10 +64,14 @@ class TestCli(unittest.TestCase):
             os.unlink(path)
 
 
-class TestSecretChecks(unittest.TestCase):
+class _ChecksTestCase(unittest.TestCase):
+    """Base for check tests: normalize a raw spec and return the set of rule ids."""
+
     def _findings(self, spec):
         return {f["rule"] for f in lint.lint_spec(lint._normalize(spec))}
 
+
+class TestSecretChecks(_ChecksTestCase):
     def test_plaintext_secret_value_flagged(self):
         spec = {"services": [{"name": "api", "envs": [
             {"key": "API_KEY", "value": "AKIA1234567890ABCDEF", "type": "GENERAL"}]}]}
@@ -100,10 +104,7 @@ class TestSecretChecks(unittest.TestCase):
         self.assertIn("secret-not-encrypted", self._findings(spec))
 
 
-class TestReliabilityChecks(unittest.TestCase):
-    def _findings(self, spec):
-        return {f["rule"] for f in lint.lint_spec(lint._normalize(spec))}
-
+class TestReliabilityChecks(_ChecksTestCase):
     def test_service_without_health_check_flagged(self):
         spec = {"services": [{"name": "web", "instance_count": 2}]}
         self.assertIn("no-health-check", self._findings(spec))
@@ -115,6 +116,11 @@ class TestReliabilityChecks(unittest.TestCase):
 
     def test_job_without_health_check_not_flagged(self):
         spec = {"jobs": [{"name": "migrate"}]}
+        self.assertNotIn("no-health-check", self._findings(spec))
+
+    def test_worker_without_health_check_not_flagged(self):
+        # Workers have no ingress, so a missing HTTP health check is not a fault.
+        spec = {"workers": [{"name": "queue", "instance_count": 2}]}
         self.assertNotIn("no-health-check", self._findings(spec))
 
     def test_single_instance_no_autoscaling_flagged(self):
@@ -140,10 +146,7 @@ class TestReliabilityChecks(unittest.TestCase):
         self.assertIn("dev-db-as-prod", self._findings(spec))
 
 
-class TestCorrectnessChecks(unittest.TestCase):
-    def _findings(self, spec):
-        return {f["rule"] for f in lint.lint_spec(lint._normalize(spec))}
-
+class TestCorrectnessChecks(_ChecksTestCase):
     def test_port_mismatch_flagged(self):
         spec = {"services": [{"name": "web", "instance_count": 2, "http_port": 8080,
                               "health_check": {"http_path": "/", "port": 9090}}]}
@@ -186,10 +189,7 @@ class TestCorrectnessChecks(unittest.TestCase):
         self.assertIn("deprecated-routes", self._findings(spec))
 
 
-class TestSizingChecks(unittest.TestCase):
-    def _findings(self, spec):
-        return {f["rule"] for f in lint.lint_spec(lint._normalize(spec))}
-
+class TestSizingChecks(_ChecksTestCase):
     def test_unknown_slug_flagged(self):
         spec = {"services": [{"name": "web", "instance_count": 2,
                               "health_check": {"http_path": "/"},
@@ -255,6 +255,17 @@ databases:
         for bad in ["a: &anchor 1\n", "a: {inline: 1}\n", "a: >\n  folded\n"]:
             with self.assertRaises(ValueError):
                 lint.parse_yaml_subset(bad)
+
+    def test_sequence_aligned_with_parent_key(self):
+        # YAML allows a block sequence at the same indent as its parent key.
+        raw = lint.parse_yaml_subset("services:\n- name: web\n- name: api\n")
+        self.assertEqual([s["name"] for s in raw["services"]], ["web", "api"])
+
+    def test_empty_value_key_then_sibling_is_null(self):
+        # An empty-value key followed by a same-indent NON-sequence sibling key
+        # must yield null for the empty key, not swallow the sibling.
+        raw = lint.parse_yaml_subset("a:\nb: 1\n")
+        self.assertEqual(raw, {"a": None, "b": 1})
 
 
 HCL_APP = '''
