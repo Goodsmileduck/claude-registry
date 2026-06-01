@@ -257,5 +257,55 @@ databases:
                 lint.parse_yaml_subset(bad)
 
 
+HCL_APP = '''
+resource "digitalocean_app" "x" {
+  spec {
+    name   = "web-app"
+    region = "nyc"
+    service {
+      name               = "web"
+      instance_count     = 1
+      instance_size_slug = "apps-s-1vcpu-1gb"
+      http_port          = 8080
+      health_check { http_path = "/" port = 9090 }
+      env {
+        key   = "API_KEY"
+        value = "AKIA1234567890ABCDEF"
+        type  = "GENERAL"
+      }
+    }
+    database {
+      name       = "db"
+      production = false
+    }
+  }
+}
+'''
+
+
+class TestHcl(unittest.TestCase):
+    def test_parses_app_spec_blocks(self):
+        raw = lint.parse_hcl_app(HCL_APP)
+        self.assertEqual(raw["name"], "web-app")
+        self.assertEqual(len(raw["services"]), 1)
+        svc = raw["services"][0]
+        self.assertEqual(svc["instance_count"], 1)
+        self.assertEqual(svc["http_port"], 8080)
+        self.assertEqual(svc["health_check"]["port"], 9090)
+        self.assertEqual(svc["envs"][0]["key"], "API_KEY")
+        self.assertIs(raw["databases"][0]["production"], False)
+
+    def test_end_to_end_hcl_flags_expected(self):
+        norm = lint.load_spec(HCL_APP, "main.tf")
+        rules = {f["rule"] for f in lint.lint_spec(norm)}
+        self.assertIn("secret-not-encrypted", rules)   # plaintext API_KEY
+        self.assertIn("port-mismatch", rules)           # 9090 != 8080
+        self.assertIn("single-instance", rules)         # count 1, no autoscaling
+        self.assertIn("dev-db-as-prod", rules)          # production false
+
+    def test_no_app_resource_returns_empty(self):
+        self.assertEqual(lint.parse_hcl_app('resource "other" "y" {}'), {})
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -22,6 +22,7 @@ finding, 2 = usage/IO/parse error.
 """
 import argparse
 import json
+import re
 import sys
 
 COMPONENT_KINDS = ("services", "workers", "jobs", "functions", "static_sites")
@@ -534,8 +535,83 @@ def parse_yaml_subset(text):
     return result if isinstance(result, dict) else {}
 
 
-def parse_hcl_app(text):  # replaced in Task 7
-    raise ValueError("Terraform parsing not yet implemented; pass JSON")
+# Block keywords that repeat inside a digitalocean_app spec -> normalized to lists
+# under these plural keys. Everything else stays a singular object.
+_HCL_REPEATED = {
+    "service": "services", "worker": "workers", "job": "jobs",
+    "function": "functions", "static_site": "static_sites",
+    "database": "databases", "env": "envs", "rule": "rules", "route": "routes",
+}
+_HCL_ATTR = re.compile(r'(?P<key>[A-Za-z0-9_]+)\s*=\s*(?P<val>"(?:[^"\\]|\\.)*"|[^\s{}]+)')
+_HCL_BLOCK_OPEN = re.compile(r'(?P<name>[A-Za-z0-9_]+)\s*(?:"[^"]*"\s*)*\{')
+
+
+def _hcl_scalar(tok):
+    if tok and tok[0] == '"' and tok[-1] == '"':
+        return tok[1:-1].encode().decode("unicode_escape")
+    if tok == "true":
+        return True
+    if tok == "false":
+        return False
+    try:
+        return int(tok)
+    except ValueError:
+        return tok
+
+
+def _parse_hcl_body(text, i):
+    """Parse a brace body starting at index i (just after '{').
+
+    Returns (node_dict, index_after_closing_brace). Repeated child blocks are
+    collected into lists keyed by their normalized plural name.
+    """
+    node = {}
+    n = len(text)
+    while i < n:
+        ch = text[i]
+        if ch == "}":
+            return node, i + 1
+        if ch in " \t\r\n,":
+            i += 1
+            continue
+        if ch == "#" or text[i:i + 2] == "//":
+            j = text.find("\n", i)
+            i = n if j == -1 else j + 1
+            continue
+        # Try a nested block first: NAME [labels] {
+        bm = _HCL_BLOCK_OPEN.match(text, i)
+        if bm and _balanced_is_block(text, bm.end() - 1):
+            name = bm.group("name")
+            child, i = _parse_hcl_body(text, bm.end())
+            if name in _HCL_REPEATED:
+                node.setdefault(_HCL_REPEATED[name], []).append(child)
+            else:
+                node[name] = child
+            continue
+        # Otherwise an attribute: key = value
+        am = _HCL_ATTR.match(text, i)
+        if am:
+            node[am.group("key")] = _hcl_scalar(am.group("val"))
+            i = am.end()
+            continue
+        i += 1
+    return node, i
+
+
+def _balanced_is_block(text, brace_idx):
+    # Heuristic: the matched '{' begins a block (not a string). Always true here
+    # because _HCL_BLOCK_OPEN only matches an identifier immediately before '{'.
+    return True
+
+
+def parse_hcl_app(text):
+    """Extract the spec of the first resource "digitalocean_app" as a raw dict."""
+    m = re.search(r'resource\s+"digitalocean_app"\s+"[^"]*"\s*\{', text)
+    if not m:
+        return {}
+    body, _ = _parse_hcl_body(text, m.end())
+    spec = body.get("spec", {})
+    return spec if isinstance(spec, dict) else {}
 
 
 if __name__ == "__main__":
