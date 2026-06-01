@@ -186,5 +186,37 @@ class TestCorrectnessChecks(unittest.TestCase):
         self.assertIn("deprecated-routes", self._findings(spec))
 
 
+class TestSizingChecks(unittest.TestCase):
+    def _findings(self, spec):
+        return {f["rule"] for f in lint.lint_spec(lint._normalize(spec))}
+
+    def test_unknown_slug_flagged(self):
+        spec = {"services": [{"name": "web", "instance_count": 2,
+                              "health_check": {"http_path": "/"},
+                              "instance_size_slug": "mega-ultra-9000"}]}
+        self.assertIn("unknown-instance-slug", self._findings(spec))
+
+    def test_known_slug_not_flagged(self):
+        spec = {"services": [{"name": "web", "instance_count": 2,
+                              "health_check": {"http_path": "/"},
+                              "instance_size_slug": "apps-s-1vcpu-1gb"}]}
+        self.assertNotIn("unknown-instance-slug", self._findings(spec))
+
+    def test_region_mismatch_flagged(self):
+        spec = {"region": "nyc",
+                "databases": [{"name": "db", "production": True, "region": "sfo3"}],
+                "services": [{"name": "web", "instance_count": 2,
+                              "health_check": {"http_path": "/"}}]}
+        self.assertIn("db-region-mismatch", self._findings(spec))
+
+    def test_region_prefix_match_not_flagged(self):
+        # app region "nyc" vs db region "nyc1" share a datacenter -> no flag
+        spec = {"region": "nyc",
+                "databases": [{"name": "db", "production": True, "region": "nyc1"}],
+                "services": [{"name": "web", "instance_count": 2,
+                              "health_check": {"http_path": "/"}}]}
+        self.assertNotIn("db-region-mismatch", self._findings(spec))
+
+
 if __name__ == "__main__":
     unittest.main()

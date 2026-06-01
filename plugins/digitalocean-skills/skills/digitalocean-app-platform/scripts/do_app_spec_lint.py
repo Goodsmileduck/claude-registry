@@ -320,6 +320,56 @@ def check_deprecated_routes(norm):
     return findings
 
 
+# Known App Platform instance_size_slugs. Source: App Platform docs / digitalocean
+# Terraform provider. VERIFY against live docs at implementation time and update.
+KNOWN_INSTANCE_SLUGS = frozenset({
+    # current "apps-" generation (shared = -s-, dedicated = -d-)
+    "apps-s-1vcpu-0.5gb", "apps-s-1vcpu-1gb", "apps-s-1vcpu-2gb", "apps-s-2vcpu-4gb",
+    "apps-d-1vcpu-0.5gb", "apps-d-1vcpu-1gb", "apps-d-1vcpu-2gb", "apps-d-2vcpu-4gb",
+    "apps-d-2vcpu-8gb", "apps-d-4vcpu-8gb", "apps-d-4vcpu-16gb", "apps-d-8vcpu-32gb",
+    # legacy generation still accepted by the API
+    "basic-xxs", "basic-xs", "basic-s", "basic-m",
+    "professional-xs", "professional-s", "professional-m",
+    "professional-1l", "professional-l", "professional-xl",
+})
+
+
+def _region_match(a, b):
+    if not a or not b:
+        return True  # unspecified -> don't guess a mismatch
+    # App spec region ("nyc") and DB region ("nyc1") share a datacenter prefix.
+    return a == b or a.startswith(b) or b.startswith(a)
+
+
+@check
+def check_unknown_instance_slug(norm):
+    findings = []
+    for c in norm["components"]:
+        slug = c["instance_size_slug"]
+        if slug and slug not in KNOWN_INSTANCE_SLUGS:
+            findings.append({
+                "severity": "warning", "rule": "unknown-instance-slug",
+                "component": c["name"] or c["kind"],
+                "message": f'instance_size_slug "{slug}" is not a recognised App Platform size.',
+                "fix": "use a current slug such as apps-s-1vcpu-1gb (run `doctl apps tier instance-size list`).",
+            })
+    return findings
+
+
+@check
+def check_db_region_mismatch(norm):
+    findings = []
+    for d in norm["databases"]:
+        if not _region_match(norm["region"], d["region"]):
+            findings.append({
+                "severity": "warning", "rule": "db-region-mismatch",
+                "component": d["name"] or "database",
+                "message": f'database region "{d["region"]}" differs from app region "{norm["region"]}" (cross-region latency).',
+                "fix": "co-locate the database with the app region unless cross-region is intentional.",
+            })
+    return findings
+
+
 # --- input dispatch -------------------------------------------------------
 
 def load_spec(text, path):
