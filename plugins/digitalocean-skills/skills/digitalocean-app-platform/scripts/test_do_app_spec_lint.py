@@ -218,5 +218,44 @@ class TestSizingChecks(unittest.TestCase):
         self.assertNotIn("db-region-mismatch", self._findings(spec))
 
 
+class TestYamlSubset(unittest.TestCase):
+    def test_parses_nested_block_mapping_and_sequence(self):
+        text = """
+name: web-app
+region: nyc
+services:
+- name: web
+  instance_count: 2
+  http_port: 8080
+  health_check:
+    http_path: /healthz
+  envs:
+  - key: API_KEY
+    value: ${API_KEY}
+    type: SECRET
+databases:
+- name: db
+  production: false
+""".lstrip()
+        raw = lint.parse_yaml_subset(text)
+        self.assertEqual(raw["name"], "web-app")
+        self.assertEqual(raw["services"][0]["instance_count"], 2)
+        self.assertTrue(raw["services"][0]["http_port"] == 8080)
+        self.assertEqual(raw["services"][0]["health_check"]["http_path"], "/healthz")
+        self.assertEqual(raw["services"][0]["envs"][0]["type"], "SECRET")
+        self.assertIs(raw["databases"][0]["production"], False)
+
+    def test_end_to_end_yaml_file_flags_dev_db(self):
+        text = "services:\n- name: web\n  instance_count: 2\n  health_check:\n    http_path: /\ndatabases:\n- name: db\n  production: false\n"
+        norm = lint.load_spec(text, "app.yaml")
+        rules = {f["rule"] for f in lint.lint_spec(norm)}
+        self.assertIn("dev-db-as-prod", rules)
+
+    def test_unsupported_construct_raises(self):
+        for bad in ["a: &anchor 1\n", "a: {inline: 1}\n", "a: >\n  folded\n"]:
+            with self.assertRaises(ValueError):
+                lint.parse_yaml_subset(bad)
+
+
 if __name__ == "__main__":
     unittest.main()

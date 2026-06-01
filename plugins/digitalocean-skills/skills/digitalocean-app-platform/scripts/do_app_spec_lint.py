@@ -428,8 +428,110 @@ def main(argv=None):
     return 1 if any(f["severity"] == "error" for f in all_findings) else 0
 
 
-def parse_yaml_subset(text):  # replaced in Task 6
-    raise ValueError("YAML parsing not yet implemented; pass JSON")
+def _yaml_scalar(token):
+    """Convert a YAML scalar token to a Python value."""
+    t = token.strip()
+    if t == "" or t == "~" or t == "null":
+        return None
+    if (t[0] == '"' and t[-1] == '"') or (t[0] == "'" and t[-1] == "'"):
+        return t[1:-1]
+    low = t.lower()
+    if low == "true":
+        return True
+    if low == "false":
+        return False
+    try:
+        return int(t)
+    except ValueError:
+        pass
+    try:
+        return float(t)
+    except ValueError:
+        pass
+    return t
+
+
+def parse_yaml_subset(text):
+    """Parse the block-YAML subset DigitalOcean emits.
+
+    Supports nested block mappings, block sequences (`- ` items), and plain or
+    quoted scalars. Rejects anchors/aliases, flow collections, and folded/literal
+    block scalars — directing the user to JSON. NOT a general YAML parser.
+    """
+    # Strip comments and blank lines, keep (indent, content) pairs.
+    lines = []
+    for raw in text.splitlines():
+        if not raw.strip() or raw.lstrip().startswith("#"):
+            continue
+        if raw.strip() in ("---", "..."):
+            continue
+        indent = len(raw) - len(raw.lstrip(" "))
+        content = raw.strip()
+        for ch in ("&", "*"):
+            if content.startswith(ch) or f": {ch}" in content:
+                raise ValueError(f"unsupported YAML anchor/alias: {content!r}; pass JSON")
+        if content.endswith((">", "|")):
+            raise ValueError(f"unsupported YAML block scalar: {content!r}; pass JSON")
+        if ": {" in content or ": [" in content or content in ("{", "["):
+            raise ValueError(f"unsupported YAML flow collection: {content!r}; pass JSON")
+        lines.append((indent, content))
+
+    pos = [0]
+
+    def parse_block(min_indent):
+        # Decide mapping vs sequence by the first line at this level.
+        if pos[0] >= len(lines):
+            return None
+        indent, content = lines[pos[0]]
+        if content.startswith("- "):
+            return parse_sequence(indent)
+        return parse_mapping(indent)
+
+    def parse_mapping(indent):
+        node = {}
+        while pos[0] < len(lines):
+            cur_indent, content = lines[pos[0]]
+            if cur_indent < indent:
+                break
+            if cur_indent > indent:
+                raise ValueError(f"unexpected indent at {content!r}")
+            if content.startswith("- "):
+                break
+            if ":" not in content:
+                raise ValueError(f"expected key: value, got {content!r}")
+            key, _, rest = content.partition(":")
+            key, rest = key.strip(), rest.strip()
+            pos[0] += 1
+            if rest == "":
+                # nested block follows if more-indented lines exist
+                if pos[0] < len(lines) and lines[pos[0]][0] >= indent:
+                    node[key] = parse_block(indent + 1)
+                else:
+                    node[key] = None
+            else:
+                node[key] = _yaml_scalar(rest)
+        return node
+
+    def parse_sequence(indent):
+        items = []
+        while pos[0] < len(lines):
+            cur_indent, content = lines[pos[0]]
+            if cur_indent < indent or not content.startswith("- "):
+                break
+            if cur_indent > indent:
+                raise ValueError(f"unexpected indent at {content!r}")
+            inner = content[2:].strip()
+            # Rewrite "- key: val" as a mapping line at indent+2 and recurse.
+            if ":" in inner:
+                lines[pos[0]] = (indent + 2, inner)
+                items.append(parse_mapping(indent + 2))
+            else:
+                pos[0] += 1
+                items.append(_yaml_scalar(inner))
+        return items
+
+    result = parse_block(0)
+    return result if isinstance(result, dict) else {}
 
 
 def parse_hcl_app(text):  # replaced in Task 7
