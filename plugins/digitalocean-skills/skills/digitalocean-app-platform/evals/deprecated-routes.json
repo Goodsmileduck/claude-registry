@@ -1,0 +1,5 @@
+{
+  "query": "DigitalOcean is warning that `routes` is deprecated in my app spec — what do I use instead?",
+  "files": ["app.yaml"],
+  "expected_behavior": "Explains that component-level routes is superseded by top-level spec.ingress.rules with match.path.prefix and component.name. The do_app_spec_lint.py validator flags deprecated-routes."
+}

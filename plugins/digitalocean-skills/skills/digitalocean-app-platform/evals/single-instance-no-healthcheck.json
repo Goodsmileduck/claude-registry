@@ -1,0 +1,5 @@
+{
+  "query": "My DigitalOcean App Platform service keeps going down with no warning and there's downtime on every deploy. Here's my spec.",
+  "files": ["app.yaml"],
+  "expected_behavior": "Identifies two reliability gaps: a single instance with no autoscaling (single point of failure) and a missing health_check (App Platform falls back to a TCP check and can't recycle unhealthy instances). Recommends instance_count >= 2 or an autoscaling block and a health_check.http_path. do_app_spec_lint.py flags single-instance and no-health-check."
+}
