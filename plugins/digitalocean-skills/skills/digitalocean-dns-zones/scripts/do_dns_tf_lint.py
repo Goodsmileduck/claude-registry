@@ -43,7 +43,9 @@ def _iter_blocks(text):
             elif ch == "}":
                 depth -= 1
             i += 1
-        body = text[start:i - 1]
+        # On a well-formed block i points just past the closing brace, so drop it;
+        # on an unclosed block (depth>0, truncated file) keep everything to EOF.
+        body = text[start:i - 1] if depth == 0 else text[start:i]
         yield m.group("label"), body
 
 
@@ -74,7 +76,7 @@ def lint_text(text):
         if rtype in ("CNAME", "MX") and value is not None and not value.endswith("."):
             findings.append({
                 "severity": "warning",
-                "rule": "cname-relative-value",
+                "rule": "relative-fqdn-value",
                 "label": label,
                 "message": (
                     f'{rtype} value "{value}" has no trailing dot; the provider '

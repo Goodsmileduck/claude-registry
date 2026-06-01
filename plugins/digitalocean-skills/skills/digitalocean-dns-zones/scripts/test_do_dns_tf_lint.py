@@ -53,7 +53,7 @@ class TestLintText(unittest.TestCase):
     def test_cname_without_trailing_dot_is_warning(self):
         findings = lint.lint_text(CNAME_NO_DOT)
         rules = [(f["severity"], f["rule"]) for f in findings]
-        self.assertIn(("warning", "cname-relative-value"), rules)
+        self.assertIn(("warning", "relative-fqdn-value"), rules)
 
     def test_clean_config_has_no_findings(self):
         self.assertEqual(lint.lint_text(CLEAN), [])
@@ -63,17 +63,32 @@ class TestLintText(unittest.TestCase):
         text = CLEAN.replace("ttl    = 300", "ttl    = 5")
         self.assertEqual(lint.lint_text(text), [])
 
+    def test_unclosed_block_keeps_last_attribute(self):
+        # A truncated file (no closing brace) must not silently drop the value.
+        text = (
+            'resource "digitalocean_record" "api" {\n'
+            '  type  = "CNAME"\n'
+            '  name  = "api"\n'
+            '  value = "www.example.com"\n'
+        )
+        rules = [f["rule"] for f in lint.lint_text(text)]
+        self.assertIn("relative-fqdn-value", rules)
+
 
 class TestCli(unittest.TestCase):
     def _run(self, text, *args):
+        import os
         import tempfile
         with tempfile.NamedTemporaryFile("w", suffix=".tf", delete=False) as fh:
             fh.write(text)
             path = fh.name
-        return subprocess.run(
-            [sys.executable, str(SCRIPT), path, *args],
-            capture_output=True, text=True,
-        )
+        try:
+            return subprocess.run(
+                [sys.executable, str(SCRIPT), path, *args],
+                capture_output=True, text=True,
+            )
+        finally:
+            os.unlink(path)
 
     def test_exit_zero_on_clean(self):
         self.assertEqual(self._run(CLEAN).returncode, 0)
