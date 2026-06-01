@@ -117,6 +117,11 @@ class TestReliabilityChecks(unittest.TestCase):
         spec = {"jobs": [{"name": "migrate"}]}
         self.assertNotIn("no-health-check", self._findings(spec))
 
+    def test_worker_without_health_check_not_flagged(self):
+        # Workers have no ingress, so a missing HTTP health check is not a fault.
+        spec = {"workers": [{"name": "queue", "instance_count": 2}]}
+        self.assertNotIn("no-health-check", self._findings(spec))
+
     def test_single_instance_no_autoscaling_flagged(self):
         spec = {"services": [{"name": "web", "instance_count": 1,
                               "health_check": {"http_path": "/"}}]}

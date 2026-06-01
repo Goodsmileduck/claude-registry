@@ -26,9 +26,6 @@ import re
 import sys
 
 COMPONENT_KINDS = ("services", "workers", "jobs", "functions", "static_sites")
-# Component kinds that serve HTTP traffic and so warrant health-check / scaling
-# checks. Jobs and functions are excluded (no long-running listener).
-HTTP_KINDS = ("service", "worker", "static_site")
 
 
 def _as_list(val):
@@ -209,9 +206,9 @@ def check_secret_build_scope(norm):
 def check_no_health_check(norm):
     findings = []
     for c in norm["components"]:
-        if c["kind"] not in HTTP_KINDS:
-            continue
-        if c["kind"] == "static_site":  # static sites have no health_check concept
+        # Scoped to services: workers/jobs/functions/static_sites do not require
+        # an HTTP health check, so flagging them would be a false positive.
+        if c["kind"] != "service":
             continue
         hc = c["health_check"]
         if not hc or (not hc.get("http_path") and not hc.get("port")):
