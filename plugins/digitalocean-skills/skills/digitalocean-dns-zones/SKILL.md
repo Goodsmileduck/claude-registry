@@ -126,7 +126,7 @@ It enforces two rules and deliberately omits a TTL check (the provider accepts `
 - `apex-cname` **(error)** — a `digitalocean_record` with `type = "CNAME"` and `name = "@"`. This would be rejected by the API at apply time and is always wrong.
 - `relative-fqdn-value` **(warning)** — a CNAME or MX `value` that contains no trailing dot. The record will double the domain at query time.
 
-The validator is a heuristic line/brace scanner, not a full HCL parser (stdlib has none). Interpolated values such as `value = local.endpoint` and `dynamic` blocks are skipped rather than guessed — the linter prints a notice when it skips rather than silently passing.
+The validator is a heuristic line/brace scanner, not a full HCL parser (stdlib has none). Interpolated values such as `value = local.endpoint` and `dynamic` blocks are skipped rather than guessed — the linter silently passes on them rather than emitting a false positive.
 
 ## DNS-01 ACME / wildcard certs
 
@@ -194,7 +194,7 @@ Pipe this through `awk` or `jq` (when using the raw API) to build import payload
 
 ## Anti-patterns checklist
 
-- Apex CNAME in Terraform or doctl — will double the domain; use A/AAAA at apex instead.
+- Apex CNAME in Terraform or doctl — the API rejects it; use A/AAAA at apex instead.
 - CNAME or MX `value` without a trailing dot — produces doubled FQDN at resolution time.
 - Echoing `DIGITALOCEAN_ACCESS_TOKEN` in CI logs or shell scripts — account-wide blast radius.
 - Adding records before `doctl compute domain create` — the API returns 404 for the parent.

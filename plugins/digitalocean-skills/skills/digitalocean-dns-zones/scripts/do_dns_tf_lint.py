@@ -7,7 +7,7 @@ brace-depth matching and flags two DigitalOcean-specific DNS mistakes:
 
   - apex-cname (error):  type = "CNAME" with name = "@". DigitalOcean has no
     apex CNAME and no CNAME flattening; such a record breaks the zone.
-  - cname-relative-value (warning): a CNAME/MX value without a trailing dot.
+  - relative-fqdn-value (warning): a CNAME/MX value without a trailing dot.
     The DigitalOcean provider treats a dotless value as relative and appends
     the domain, producing a doubled FQDN (api.example.com.example.com).
 
