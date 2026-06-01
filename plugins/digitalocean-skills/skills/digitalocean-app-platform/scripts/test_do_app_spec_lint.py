@@ -100,5 +100,45 @@ class TestSecretChecks(unittest.TestCase):
         self.assertIn("secret-not-encrypted", self._findings(spec))
 
 
+class TestReliabilityChecks(unittest.TestCase):
+    def _findings(self, spec):
+        return {f["rule"] for f in lint.lint_spec(lint._normalize(spec))}
+
+    def test_service_without_health_check_flagged(self):
+        spec = {"services": [{"name": "web", "instance_count": 2}]}
+        self.assertIn("no-health-check", self._findings(spec))
+
+    def test_service_with_health_check_not_flagged(self):
+        spec = {"services": [{"name": "web", "instance_count": 2,
+                              "health_check": {"http_path": "/"}}]}
+        self.assertNotIn("no-health-check", self._findings(spec))
+
+    def test_job_without_health_check_not_flagged(self):
+        spec = {"jobs": [{"name": "migrate"}]}
+        self.assertNotIn("no-health-check", self._findings(spec))
+
+    def test_single_instance_no_autoscaling_flagged(self):
+        spec = {"services": [{"name": "web", "instance_count": 1,
+                              "health_check": {"http_path": "/"}}]}
+        self.assertIn("single-instance", self._findings(spec))
+
+    def test_autoscaling_suppresses_single_instance(self):
+        spec = {"services": [{"name": "web", "instance_count": 1,
+                              "autoscaling": {"min_instance_count": 1, "max_instance_count": 3},
+                              "health_check": {"http_path": "/"}}]}
+        self.assertNotIn("single-instance", self._findings(spec))
+
+    def test_two_instances_not_flagged_single(self):
+        spec = {"services": [{"name": "web", "instance_count": 2,
+                              "health_check": {"http_path": "/"}}]}
+        self.assertNotIn("single-instance", self._findings(spec))
+
+    def test_dev_db_flagged(self):
+        spec = {"databases": [{"name": "db", "production": False}],
+                "services": [{"name": "web", "instance_count": 2,
+                              "health_check": {"http_path": "/"}}]}
+        self.assertIn("dev-db-as-prod", self._findings(spec))
+
+
 if __name__ == "__main__":
     unittest.main()

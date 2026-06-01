@@ -204,6 +204,57 @@ def check_secret_build_scope(norm):
     return findings
 
 
+@check
+def check_no_health_check(norm):
+    findings = []
+    for c in norm["components"]:
+        if c["kind"] not in HTTP_KINDS:
+            continue
+        if c["kind"] == "static_site":  # static sites have no health_check concept
+            continue
+        hc = c["health_check"]
+        if not hc or (not hc.get("http_path") and not hc.get("port")):
+            findings.append({
+                "severity": "warning", "rule": "no-health-check",
+                "component": c["name"] or c["kind"],
+                "message": "service has no health_check; App Platform falls back to a TCP check only.",
+                "fix": "add health_check.http_path (e.g. /healthz) so unhealthy instances are recycled.",
+            })
+    return findings
+
+
+@check
+def check_single_instance(norm):
+    findings = []
+    for c in norm["components"]:
+        if c["kind"] != "service":
+            continue
+        count = c["instance_count"]
+        # None means unspecified, which App Platform defaults to 1 -> still a SPOF.
+        if c["autoscaling"] is None and (count is None or count == 1):
+            findings.append({
+                "severity": "warning", "rule": "single-instance",
+                "component": c["name"] or c["kind"],
+                "message": "service runs a single instance with no autoscaling (single point of failure).",
+                "fix": "set instance_count >= 2 or add an autoscaling block for HA.",
+            })
+    return findings
+
+
+@check
+def check_dev_db_as_prod(norm):
+    findings = []
+    for d in norm["databases"]:
+        if d["production"] is False:
+            findings.append({
+                "severity": "warning", "rule": "dev-db-as-prod",
+                "component": d["name"] or "database",
+                "message": "database has production: false (a dev database — no backups, no standby).",
+                "fix": "set production: true for any database backing a real workload.",
+            })
+    return findings
+
+
 # --- input dispatch -------------------------------------------------------
 
 def load_spec(text, path):
