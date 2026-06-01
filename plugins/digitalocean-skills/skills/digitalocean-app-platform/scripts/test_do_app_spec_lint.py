@@ -64,10 +64,14 @@ class TestCli(unittest.TestCase):
             os.unlink(path)
 
 
-class TestSecretChecks(unittest.TestCase):
+class _ChecksTestCase(unittest.TestCase):
+    """Base for check tests: normalize a raw spec and return the set of rule ids."""
+
     def _findings(self, spec):
         return {f["rule"] for f in lint.lint_spec(lint._normalize(spec))}
 
+
+class TestSecretChecks(_ChecksTestCase):
     def test_plaintext_secret_value_flagged(self):
         spec = {"services": [{"name": "api", "envs": [
             {"key": "API_KEY", "value": "AKIA1234567890ABCDEF", "type": "GENERAL"}]}]}
@@ -100,10 +104,7 @@ class TestSecretChecks(unittest.TestCase):
         self.assertIn("secret-not-encrypted", self._findings(spec))
 
 
-class TestReliabilityChecks(unittest.TestCase):
-    def _findings(self, spec):
-        return {f["rule"] for f in lint.lint_spec(lint._normalize(spec))}
-
+class TestReliabilityChecks(_ChecksTestCase):
     def test_service_without_health_check_flagged(self):
         spec = {"services": [{"name": "web", "instance_count": 2}]}
         self.assertIn("no-health-check", self._findings(spec))
@@ -145,10 +146,7 @@ class TestReliabilityChecks(unittest.TestCase):
         self.assertIn("dev-db-as-prod", self._findings(spec))
 
 
-class TestCorrectnessChecks(unittest.TestCase):
-    def _findings(self, spec):
-        return {f["rule"] for f in lint.lint_spec(lint._normalize(spec))}
-
+class TestCorrectnessChecks(_ChecksTestCase):
     def test_port_mismatch_flagged(self):
         spec = {"services": [{"name": "web", "instance_count": 2, "http_port": 8080,
                               "health_check": {"http_path": "/", "port": 9090}}]}
@@ -191,10 +189,7 @@ class TestCorrectnessChecks(unittest.TestCase):
         self.assertIn("deprecated-routes", self._findings(spec))
 
 
-class TestSizingChecks(unittest.TestCase):
-    def _findings(self, spec):
-        return {f["rule"] for f in lint.lint_spec(lint._normalize(spec))}
-
+class TestSizingChecks(_ChecksTestCase):
     def test_unknown_slug_flagged(self):
         spec = {"services": [{"name": "web", "instance_count": 2,
                               "health_check": {"http_path": "/"},
