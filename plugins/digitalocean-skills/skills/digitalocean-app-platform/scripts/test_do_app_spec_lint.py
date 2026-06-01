@@ -140,5 +140,51 @@ class TestReliabilityChecks(unittest.TestCase):
         self.assertIn("dev-db-as-prod", self._findings(spec))
 
 
+class TestCorrectnessChecks(unittest.TestCase):
+    def _findings(self, spec):
+        return {f["rule"] for f in lint.lint_spec(lint._normalize(spec))}
+
+    def test_port_mismatch_flagged(self):
+        spec = {"services": [{"name": "web", "instance_count": 2, "http_port": 8080,
+                              "health_check": {"http_path": "/", "port": 9090}}]}
+        self.assertIn("port-mismatch", self._findings(spec))
+
+    def test_matching_ports_not_flagged(self):
+        spec = {"services": [{"name": "web", "instance_count": 2, "http_port": 8080,
+                              "health_check": {"http_path": "/", "port": 8080}}]}
+        self.assertNotIn("port-mismatch", self._findings(spec))
+
+    def test_duplicate_route_prefix_flagged(self):
+        spec = {"ingress": {"rules": [
+            {"match": {"path": {"prefix": "/api"}}, "component": {"name": "a"}},
+            {"match": {"path": {"prefix": "/api"}}, "component": {"name": "b"}}]}}
+        self.assertIn("route-overlap", self._findings(spec))
+
+    def test_prefix_shadow_flagged(self):
+        spec = {"ingress": {"rules": [
+            {"match": {"path": {"prefix": "/"}}, "component": {"name": "a"}},
+            {"match": {"path": {"prefix": "/api"}}, "component": {"name": "b"}}]}}
+        self.assertIn("route-overlap", self._findings(spec))
+
+    def test_distinct_routes_not_flagged(self):
+        spec = {"ingress": {"rules": [
+            {"match": {"path": {"prefix": "/api"}}, "component": {"name": "a"}},
+            {"match": {"path": {"prefix": "/web"}}, "component": {"name": "b"}}]}}
+        self.assertNotIn("route-overlap", self._findings(spec))
+
+    def test_source_conflict_flagged(self):
+        spec = {"services": [{"name": "web", "instance_count": 2,
+                              "health_check": {"http_path": "/"},
+                              "github": {"repo": "o/r", "branch": "main"},
+                              "image": {"registry_type": "DOCR", "repository": "web"}}]}
+        self.assertIn("source-conflict", self._findings(spec))
+
+    def test_deprecated_routes_flagged(self):
+        spec = {"services": [{"name": "web", "instance_count": 2,
+                              "health_check": {"http_path": "/"},
+                              "routes": [{"path": "/"}]}]}
+        self.assertIn("deprecated-routes", self._findings(spec))
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -255,6 +255,71 @@ def check_dev_db_as_prod(norm):
     return findings
 
 
+@check
+def check_port_mismatch(norm):
+    findings = []
+    for c in norm["components"]:
+        hc = c["health_check"]
+        hc_port = hc.get("port") if hc else None
+        if hc_port is not None and c["http_port"] is not None and hc_port != c["http_port"]:
+            findings.append({
+                "severity": "error", "rule": "port-mismatch",
+                "component": c["name"] or c["kind"],
+                "message": f'health_check.port ({hc_port}) != http_port ({c["http_port"]}); the check probes the wrong port.',
+                "fix": "align health_check.port with http_port (or drop it to inherit http_port).",
+            })
+    return findings
+
+
+@check
+def check_route_overlap(norm):
+    findings = []
+    rules = [r for r in norm["ingress"]["rules"] if r["prefix"] is not None]
+    seen = []
+    for r in rules:
+        for prev in seen:
+            a, b = prev["prefix"], r["prefix"]
+            # exact duplicate, or one prefix shadows the other, to different components
+            shadows = a == b or b.startswith(a.rstrip("/") + "/") or a.startswith(b.rstrip("/") + "/") or a == "/" or b == "/"
+            if shadows and prev["component"] != r["component"]:
+                findings.append({
+                    "severity": "error", "rule": "route-overlap",
+                    "component": r["component"] or "ingress",
+                    "message": f'ingress prefix "{b}" overlaps "{a}" (routes to a different component); matching is order-sensitive and ambiguous.',
+                    "fix": "make prefixes mutually exclusive, or order most-specific-first and verify intent.",
+                })
+        seen.append(r)
+    return findings
+
+
+@check
+def check_source_conflict(norm):
+    findings = []
+    for c in norm["components"]:
+        if c["has_git"] and c["has_image"]:
+            findings.append({
+                "severity": "error", "rule": "source-conflict",
+                "component": c["name"] or c["kind"],
+                "message": "component sets both a git source and an image; App Platform needs exactly one.",
+                "fix": "keep either the git/github/gitlab block or the image block, not both.",
+            })
+    return findings
+
+
+@check
+def check_deprecated_routes(norm):
+    findings = []
+    for c in norm["components"]:
+        if c["routes"]:
+            findings.append({
+                "severity": "warning", "rule": "deprecated-routes",
+                "component": c["name"] or c["kind"],
+                "message": "component-level routes is deprecated in favour of top-level ingress.rules.",
+                "fix": "move routing to spec.ingress.rules with match.path.prefix + component.name.",
+            })
+    return findings
+
+
 # --- input dispatch -------------------------------------------------------
 
 def load_spec(text, path):
