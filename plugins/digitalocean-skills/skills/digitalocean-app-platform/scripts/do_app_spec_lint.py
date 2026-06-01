@@ -128,6 +128,82 @@ def lint_spec(norm):
     return findings
 
 
+# Env-key substrings that strongly imply the value is a credential.
+SECRET_KEY_HINTS = (
+    "SECRET", "TOKEN", "PASSWORD", "PASSWD", "APIKEY", "API_KEY",
+    "PRIVATE_KEY", "ACCESS_KEY", "CLIENT_SECRET",
+)
+# A value-only signal: long, whitespace-free strings that mix letters+digits
+# look like raw credentials. 24 chars avoids flagging short slugs/enum values
+# while catching typical API keys/tokens (AWS keys are 20-40, JWTs longer).
+MIN_SECRET_VALUE_LEN = 24
+
+
+def _is_substitution(value):
+    # ${VAR}, ${db.X}, ${APP_URL} are GitHub-secret / bindable / app-wide refs,
+    # never literal secrets. Any value containing ${ is treated as a ref.
+    return isinstance(value, str) and "${" in value
+
+
+def _looks_like_secret_value(value):
+    if not isinstance(value, str) or not value:
+        return False
+    if value.startswith("-----BEGIN"):
+        return True
+    v = value.strip()
+    if len(v) >= MIN_SECRET_VALUE_LEN and not any(c.isspace() for c in v):
+        has_alpha = any(c.isalpha() for c in v)
+        has_digit = any(c.isdigit() for c in v)
+        return has_alpha and has_digit
+    return False
+
+
+def _key_implies_secret(key):
+    return isinstance(key, str) and any(h in key.upper() for h in SECRET_KEY_HINTS)
+
+
+def _iter_envs(norm):
+    """Yield (component_label, env) for app-level and component envs."""
+    for e in norm["envs"]:
+        yield "app", e
+    for c in norm["components"]:
+        for e in c["envs"]:
+            yield c["name"] or c["kind"], e
+
+
+@check
+def check_secret_not_encrypted(norm):
+    findings = []
+    for label, e in _iter_envs(norm):
+        value, etype = e["value"], e["type"]
+        if _is_substitution(value):
+            continue
+        if etype == "SECRET":
+            continue
+        if _key_implies_secret(e["key"]) or _looks_like_secret_value(value):
+            findings.append({
+                "severity": "error", "rule": "secret-not-encrypted",
+                "component": label,
+                "message": f'env "{e["key"]}" holds a secret-looking value with type != SECRET.',
+                "fix": 'set type: SECRET and supply the value via ${VAR} substitution, not inline.',
+            })
+    return findings
+
+
+@check
+def check_secret_build_scope(norm):
+    findings = []
+    for label, e in _iter_envs(norm):
+        if e["type"] == "SECRET" and e["scope"] == "RUN_AND_BUILD_TIME":
+            findings.append({
+                "severity": "warning", "rule": "secret-build-scope",
+                "component": label,
+                "message": f'secret env "{e["key"]}" is scoped RUN_AND_BUILD_TIME and leaks into the build layer.',
+                "fix": "use scope: RUN_TIME unless the build genuinely needs the secret.",
+            })
+    return findings
+
+
 # --- input dispatch -------------------------------------------------------
 
 def load_spec(text, path):

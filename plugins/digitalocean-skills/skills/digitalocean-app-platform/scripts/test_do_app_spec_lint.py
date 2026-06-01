@@ -64,5 +64,41 @@ class TestCli(unittest.TestCase):
             os.unlink(path)
 
 
+class TestSecretChecks(unittest.TestCase):
+    def _findings(self, spec):
+        return {f["rule"] for f in lint.lint_spec(lint._normalize(spec))}
+
+    def test_plaintext_secret_value_flagged(self):
+        spec = {"services": [{"name": "api", "envs": [
+            {"key": "API_KEY", "value": "AKIA1234567890ABCDEF", "type": "GENERAL"}]}]}
+        self.assertIn("secret-not-encrypted", self._findings(spec))
+
+    def test_substitution_ref_not_flagged(self):
+        spec = {"services": [{"name": "api", "envs": [
+            {"key": "API_KEY", "value": "${API_KEY}", "type": "SECRET"}]}]}
+        self.assertNotIn("secret-not-encrypted", self._findings(spec))
+
+    def test_bindable_ref_not_flagged(self):
+        spec = {"services": [{"name": "api", "envs": [
+            {"key": "DATABASE_URL", "value": "${db.DATABASE_URL}"}]}]}
+        self.assertNotIn("secret-not-encrypted", self._findings(spec))
+
+    def test_pem_value_flagged_even_with_benign_key(self):
+        spec = {"services": [{"name": "api", "envs": [
+            {"key": "CONFIG", "value": "-----BEGIN PRIVATE KEY-----\nMII...", "type": "GENERAL"}]}]}
+        self.assertIn("secret-not-encrypted", self._findings(spec))
+
+    def test_secret_in_build_scope_flagged(self):
+        spec = {"services": [{"name": "api", "envs": [
+            {"key": "TOKEN", "value": "${TOKEN}", "type": "SECRET",
+             "scope": "RUN_AND_BUILD_TIME"}]}]}
+        self.assertIn("secret-build-scope", self._findings(spec))
+
+    def test_app_level_envs_checked_too(self):
+        spec = {"envs": [{"key": "PASSWORD", "value": "hunter2hunter2hunter2", "type": "GENERAL"}],
+                "services": [{"name": "api"}]}
+        self.assertIn("secret-not-encrypted", self._findings(spec))
+
+
 if __name__ == "__main__":
     unittest.main()
