@@ -123,6 +123,37 @@
       "category": "devops"
     },
     {
+      "name": "digitalocean-skills",
+      "source": {
+        "source": "github",
+        "repo": "Goodsmileduck/claude-registry"
+      },
+      "description": "DigitalOcean operations skills. Currently: DNS zones via doctl, the DigitalOcean API v2, and the digitalocean Terraform provider — domain/record CRUD, the apex CNAME / no-flattening trap when migrating from Cloudflare, account-wide token handling, FQDN trailing-dot semantics, DNS-01 ACME wildcard certs, and nameserver delegation.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Stanislav Serebrennikov",
+        "url": "https://github.com/Goodsmileduck"
+      },
+      "homepage": "https://github.com/Goodsmileduck/claude-registry",
+      "repository": "https://github.com/Goodsmileduck/claude-registry",
+      "license": "MIT",
+      "keywords": [
+        "digitalocean",
+        "doctl",
+        "dns",
+        "digitalocean-dns",
+        "domain-records",
+        "terraform",
+        "digitalocean_record",
+        "dns-01",
+        "acme",
+        "wildcard-cert",
+        "nameserver",
+        "cloudflare-migration"
+      ],
+      "category": "devops"
+    },
+    {
       "name": "setup-project-skills",
       "source": {
         "source": "github",

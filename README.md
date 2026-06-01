@@ -20,6 +20,7 @@ Discover, install, and share plugins that enhance your Claude Code experience. F
 - [Available Plugins](#available-plugins)
   - [claude-md-optimizer](#claude-md-optimizer)
   - [do-registry-cleanup](#do-registry-cleanup)
+  - [digitalocean-skills](#digitalocean-skills)
 - [Installation](#installation)
 - [Repository Structure](#repository-structure)
 - [Contributing](#contributing)
@@ -91,6 +92,27 @@ Analyze and clean DigitalOcean Container Registry images. Requires `doctl` CLI.
 ```
 
 **Triggers:** "clean registry", "delete old images", "DO registry", "registry cleanup"
+
+---
+
+### digitalocean-skills
+
+DigitalOcean operations skills. First skill: `digitalocean-dns-zones` — managing DNS via `doctl`, the DigitalOcean API v2, and the `digitalocean` Terraform provider.
+
+| Feature | Description |
+|---------|-------------|
+| **Record CRUD** | doctl + Terraform record management; `@` for apex, list-then-act idempotency |
+| **Apex CNAME trap** | Warns DO has no apex CNAME or flattening — the #1 Cloudflare-migration mistake |
+| **TF linter** | Stdlib `do_dns_tf_lint.py` flags apex CNAMEs and dotless CNAME/MX values |
+| **Wildcard certs** | DNS-01 ACME via cert-manager's DO solver or lego/acme.sh |
+| **Delegation** | Nameserver setup and record-by-record zone migration |
+
+**Install:**
+```bash
+/plugin install digitalocean-skills@claude-registry
+```
+
+**Triggers:** "DigitalOcean DNS", "doctl domain records", "digitalocean_record", "apex CNAME on DO", "wildcard cert DigitalOcean"
 
 ---
 
