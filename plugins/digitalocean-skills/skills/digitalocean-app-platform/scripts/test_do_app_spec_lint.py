@@ -256,6 +256,17 @@ databases:
             with self.assertRaises(ValueError):
                 lint.parse_yaml_subset(bad)
 
+    def test_sequence_aligned_with_parent_key(self):
+        # YAML allows a block sequence at the same indent as its parent key.
+        raw = lint.parse_yaml_subset("services:\n- name: web\n- name: api\n")
+        self.assertEqual([s["name"] for s in raw["services"]], ["web", "api"])
+
+    def test_empty_value_key_then_sibling_is_null(self):
+        # An empty-value key followed by a same-indent NON-sequence sibling key
+        # must yield null for the empty key, not swallow the sibling.
+        raw = lint.parse_yaml_subset("a:\nb: 1\n")
+        self.assertEqual(raw, {"a": None, "b": 1})
+
 
 HCL_APP = '''
 resource "digitalocean_app" "x" {

@@ -504,11 +504,19 @@ def parse_yaml_subset(text):
             key, rest = key.strip(), rest.strip()
             pos[0] += 1
             if rest == "":
-                # nested block follows if more-indented lines exist
-                if pos[0] < len(lines) and lines[pos[0]][0] >= indent:
-                    node[key] = parse_block(indent + 1)
-                else:
-                    node[key] = None
+                # A nested block follows when the next line is more-indented
+                # (a child mapping/sequence) OR is a block sequence at the same
+                # indent as this key — YAML allows `key:` then `- item` aligned
+                # with the key. A same-indent non-sequence line is a sibling key,
+                # so this key's value is null.
+                nested = False
+                if pos[0] < len(lines):
+                    nxt_indent, nxt_content = lines[pos[0]]
+                    if nxt_indent > indent:
+                        nested = True
+                    elif nxt_indent == indent and nxt_content.startswith("- "):
+                        nested = True
+                node[key] = parse_block(indent + 1) if nested else None
             else:
                 node[key] = _yaml_scalar(rest)
         return node
