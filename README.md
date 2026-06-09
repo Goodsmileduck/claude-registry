@@ -320,6 +320,14 @@ MIT License
 
 ---
 
+## Author
+
+Maintained by **Stanislav Serebrennikov** — [@Goodsmileduck](https://github.com/Goodsmileduck).
+
+Contributions and plugin submissions are welcome; see [Contributing](#contributing).
+
+---
+
 **Found this useful?** Star the repo and help others discover Claude Code plugins!
 
 [![Star this repo](https://img.shields.io/github/stars/Goodsmileduck/claude-registry?style=social)](https://github.com/Goodsmileduck/claude-registry)
