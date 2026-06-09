@@ -1,8 +1,21 @@
 name: skills-ci
 "on":
+  # Only run when skill content, the validators, the manifest, or this
+  # workflow change — pure docs/other-CI PRs don't need the gate. When it
+  # does run it still lints ALL skills, not just the changed ones.
   pull_request:
+    paths:
+      - "plugins/**"
+      - "scripts/**"
+      - ".claude-plugin/marketplace.json"
+      - ".github/workflows/skills-ci.yml"
   push:
     branches: [main]
+    paths:
+      - "plugins/**"
+      - "scripts/**"
+      - ".claude-plugin/marketplace.json"
+      - ".github/workflows/skills-ci.yml"
 permissions:
   contents: read
   pull-requests: write
