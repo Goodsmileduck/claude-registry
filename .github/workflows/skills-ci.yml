@@ -21,8 +21,10 @@ jobs:
       - name: Lint skills against best practices
         id: lint
         run: |
-          python scripts/lint_skills.py --format json > lint-report.json \
+          # stdout -> JSON report; stderr -> coverage summary (how many skills scanned)
+          python scripts/lint_skills.py --format json > lint-report.json 2> lint-summary.txt \
             || echo "lint_failed=true" >> "$GITHUB_OUTPUT"
+          cat lint-summary.txt   # surface coverage in the job log (proves all skills ran)
 
       - name: Compile all skill scripts (syntax gate)
         run: python -m compileall -q plugins scripts
@@ -47,8 +49,11 @@ jobs:
             const fs = require('fs');
             let findings = [];
             try { findings = JSON.parse(fs.readFileSync('lint-report.json', 'utf8')); } catch (e) {}
+            let coverage = '';
+            try { coverage = fs.readFileSync('lint-summary.txt', 'utf8').trim(); } catch (e) {}
             const marker = '<!-- skills-ci -->';
             let body = marker + '\n## 🧭 Skills best-practices lint\n\n';
+            if (coverage) body += `_${coverage}_\n\n`;
             if (findings.length === 0) {
               body += '✅ All skills pass the mechanical best-practices rules.\n';
             } else {

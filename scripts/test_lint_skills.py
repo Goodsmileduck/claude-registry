@@ -86,6 +86,21 @@ class TestCli(unittest.TestCase):
             r = self._run("--root", t, "--format", "json")
             self.assertEqual(json.loads(r.stdout), [])
 
+    def test_coverage_summary_on_stderr(self):
+        with tempfile.TemporaryDirectory() as t:
+            root = Path(t)
+            make_skill(root, "p1", "alpha-skill")
+            make_skill(root, "p1", "beta-skill")
+            make_plugin_json(root, "p1")
+            make_marketplace(root, [{"name": "p1", "description": "A plugin."}])
+            r = self._run("--root", t, "--format", "json")
+            self.assertIn("Linted 2 skill(s) across 1 plugin(s)", r.stderr)
+
+    def test_empty_root_warns(self):
+        with tempfile.TemporaryDirectory() as t:
+            r = self._run("--root", t)
+            self.assertIn("no skills found", r.stderr)
+
 
 class TestSkillRules(unittest.TestCase):
     def _rules(self, **kw):

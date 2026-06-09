@@ -268,13 +268,22 @@ def main(argv=None):
     parser.add_argument("--format", choices=("text", "json"), default="text")
     parser.add_argument("--root", default=".", help="repo root (default: cwd)")
     args = parser.parse_args(argv)
-    findings = lint_repo(Path(args.root))
+    root = Path(args.root)
+    skill_dirs = find_skill_dirs(root)
+    plugins = {d.parent.parent.name for d in skill_dirs}
+    findings = lint_repo(root)
+    # Coverage summary always goes to stderr (keeps stdout clean for --format json).
+    # A zero-skill regression is therefore visible in CI, not a silent green.
+    summary = (f"Linted {len(skill_dirs)} skill(s) across {len(plugins)} plugin(s); "
+               f"{len(findings)} finding(s).")
+    if not skill_dirs:
+        summary += " WARNING: no skills found — check --root."
+    print(summary, file=sys.stderr)
     if args.format == "json":
         print(json.dumps([f.as_dict() for f in findings], indent=2))
     else:
         for f in findings:
             print(f.as_line())
-        print(f"\n{len(findings)} finding(s).", file=sys.stderr)
     return 1 if findings else 0
 
 
