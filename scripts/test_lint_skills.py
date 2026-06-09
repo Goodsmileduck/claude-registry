@@ -16,8 +16,7 @@ def make_skill(root, plugin, skill, name=None, description="Does a thing. Use wh
     d = root / "plugins" / plugin / "skills" / skill
     d.mkdir(parents=True, exist_ok=True)
     fm = "---\n"
-    if name is not None:
-        fm += f"name: {name}\n"
+    fm += f"name: {name}\n"
     if description is not None:
         fm += f"description: {description}\n"
     fm += "---\n"
@@ -65,34 +64,33 @@ class TestCli(unittest.TestCase):
     def _run(self, *args):
         return subprocess.run([sys.executable, str(SCRIPT), *args], capture_output=True, text=True)
 
+    def _clean_repo(self, t, skills=("alpha-skill",)):
+        """Build a minimal clean repo (plugin p1 with the given skills) under t."""
+        root = Path(t)
+        for s in skills:
+            make_skill(root, "p1", s)
+        make_plugin_json(root, "p1")
+        make_marketplace(root, [{"name": "p1", "description": "A plugin."}])
+        return root
+
     def test_help_exits_zero(self):
         self.assertEqual(self._run("--help").returncode, 0)
 
     def test_clean_repo_exits_zero(self):
         with tempfile.TemporaryDirectory() as t:
-            root = Path(t)
-            make_skill(root, "p1", "alpha-skill")
-            make_plugin_json(root, "p1")
-            make_marketplace(root, [{"name": "p1", "description": "A plugin."}])
+            self._clean_repo(t)
             r = self._run("--root", t)
             self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
 
     def test_json_format_is_parseable(self):
         with tempfile.TemporaryDirectory() as t:
-            root = Path(t)
-            make_skill(root, "p1", "alpha-skill")
-            make_plugin_json(root, "p1")
-            make_marketplace(root, [{"name": "p1", "description": "A plugin."}])
+            self._clean_repo(t)
             r = self._run("--root", t, "--format", "json")
             self.assertEqual(json.loads(r.stdout), [])
 
     def test_coverage_summary_on_stderr(self):
         with tempfile.TemporaryDirectory() as t:
-            root = Path(t)
-            make_skill(root, "p1", "alpha-skill")
-            make_skill(root, "p1", "beta-skill")
-            make_plugin_json(root, "p1")
-            make_marketplace(root, [{"name": "p1", "description": "A plugin."}])
+            self._clean_repo(t, skills=("alpha-skill", "beta-skill"))
             r = self._run("--root", t, "--format", "json")
             self.assertIn("Linted 2 skill(s) across 1 plugin(s)", r.stderr)
 

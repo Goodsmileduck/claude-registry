@@ -8,6 +8,7 @@ import argparse
 import json
 import re
 import sys
+from dataclasses import asdict, dataclass
 from pathlib import Path
 
 # Thresholds (from AGENTS.md):
@@ -31,14 +32,17 @@ FENCE_RE = re.compile(r"```.*?```", re.DOTALL)
 INLINE_CODE_RE = re.compile(r"`[^`]*`")
 
 
+@dataclass
 class Finding:
-    def __init__(self, path, rule, message):
-        self.path = str(path)
-        self.rule = rule
-        self.message = message
+    path: str
+    rule: str
+    message: str
+
+    def __post_init__(self):
+        self.path = str(self.path)  # callers pass Path objects
 
     def as_dict(self):
-        return {"path": self.path, "rule": self.rule, "message": self.message}
+        return asdict(self)
 
     def as_line(self):
         return f"{self.path}: {self.rule}: {self.message}"
@@ -87,9 +91,7 @@ def has_toc(lines):
     head = lines[:REF_TOC_SCAN_LINES]
     for line in head:
         low = line.lower()
-        if low.startswith("## ") and "table of contents" in low:
-            return True
-        if low.startswith("## contents"):
+        if low.startswith("##") and "contents" in low:  # "## Table of Contents" / "## Contents"
             return True
     # two or more markdown link-list items near the top count as a TOC
     link_items = sum(1 for l in head if re.match(r"^\s*[-*] \[.+\]\(.+\)", l))
@@ -166,6 +168,13 @@ def _load_json(path):
         return None, str(exc)
 
 
+def _github_repo(source):
+    """Return the github repo for a marketplace `source`, or None if not a github source."""
+    if isinstance(source, dict) and source.get("source") == "github":
+        return source.get("repo")
+    return None
+
+
 def lint_manifests(repo_root):
     findings = []
     plugins_dir = repo_root / "plugins"
@@ -191,15 +200,13 @@ def lint_manifests(repo_root):
     # plugin (e.g. cloudflare/skills) and is not expected to exist locally.
     home_repos = set()
     for name in on_disk:
-        src = market_entries.get(name, {}).get("source")
-        if isinstance(src, dict) and src.get("repo"):
-            home_repos.add(src["repo"])
+        repo = _github_repo(market_entries.get(name, {}).get("source"))
+        if repo:
+            home_repos.add(repo)
 
     def is_external(entry):
-        src = entry.get("source")
-        if isinstance(src, dict) and src.get("source") == "github":
-            return src.get("repo") not in home_repos
-        return False
+        repo = _github_repo(entry.get("source"))
+        return repo is not None and repo not in home_repos
 
     # bidirectional registration (external/upstream entries exempt from the dir check)
     for name in on_disk:
@@ -249,15 +256,18 @@ def find_skill_dirs(repo_root):
     return sorted(p.parent for p in (repo_root / "plugins").glob("*/skills/*/SKILL.md"))
 
 
-def lint_repo(repo_root):
+def lint_repo(repo_root, skill_dirs=None):
+    if skill_dirs is None:
+        skill_dirs = find_skill_dirs(repo_root)
     findings = []
-    for sd in find_skill_dirs(repo_root):
+    for sd in skill_dirs:
         findings.extend(lint_skill(sd))
     findings.extend(lint_manifests(repo_root))
     # normalize paths to be relative to repo_root for stable output
+    root_resolved = repo_root.resolve()
     for f in findings:
         try:
-            f.path = str(Path(f.path).resolve().relative_to(repo_root.resolve()))
+            f.path = str(Path(f.path).resolve().relative_to(root_resolved))
         except ValueError:
             pass
     return findings
@@ -271,7 +281,7 @@ def main(argv=None):
     root = Path(args.root)
     skill_dirs = find_skill_dirs(root)
     plugins = {d.parent.parent.name for d in skill_dirs}
-    findings = lint_repo(root)
+    findings = lint_repo(root, skill_dirs)
     # Coverage summary always goes to stderr (keeps stdout clean for --format json).
     # A zero-skill regression is therefore visible in CI, not a silent green.
     summary = (f"Linted {len(skill_dirs)} skill(s) across {len(plugins)} plugin(s); "
