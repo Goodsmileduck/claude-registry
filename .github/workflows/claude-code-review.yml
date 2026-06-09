@@ -2,6 +2,10 @@ name: Claude Code Review
 "on":
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+    # Only review PRs that touch skill content (SKILL.md, references, scripts,
+    # plugin.json). Docs/CI/validator-only PRs skip the LLM reviewer entirely.
+    paths:
+      - "plugins/**"
 
 # Cancel an in-flight review when the PR is updated again.
 concurrency:
