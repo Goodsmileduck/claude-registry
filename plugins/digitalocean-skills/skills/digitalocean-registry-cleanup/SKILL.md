@@ -1,5 +1,5 @@
 ---
-name: do-registry-cleanup
+name: digitalocean-registry-cleanup
 description: Analyze and clean DigitalOcean Container Registry images. Lists repos with tag counts, deletes old tags (keep last N), finds stale repos, triggers garbage collection. Supports dry-run mode. Use when user says "clean registry", "delete old images", "DO registry", "registry cleanup", "docker images cleanup", "container registry", or "clean up old tags".
 ---
 

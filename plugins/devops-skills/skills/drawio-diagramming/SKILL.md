@@ -1,5 +1,5 @@
 ---
-name: drawio
+name: drawio-diagramming
 description: Create and open draw.io diagrams. Use when the user wants to generate, edit, or open a diagram in draw.io (architecture/HLA diagrams, infra & Kubernetes topology, flowcharts, network diagrams) — covers the draw.io MCP servers (open_drawio_xml/mermaid/csv) and native .drawio file generation.
 ---
 

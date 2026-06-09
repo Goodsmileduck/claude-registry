@@ -20,7 +20,6 @@ Discover, install, and share plugins that enhance your Claude Code experience. F
 - [Available Plugins](#available-plugins)
   - [claude-md-optimizer](#claude-md-optimizer)
   - [devops-skills](#devops-skills)
-  - [do-registry-cleanup](#do-registry-cleanup)
   - [digitalocean-skills](#digitalocean-skills)
   - [setup-project-skills](#setup-project-skills)
   - [mindfulness-mentor](#mindfulness-mentor)
@@ -83,7 +82,7 @@ Analyzes and optimizes CLAUDE.md files following Anthropic's official best pract
 
 ### devops-skills
 
-Multi-cloud DevOps workflows across 15 skills covering infrastructure-as-code, Kubernetes, containers, GitOps, cloud IAM, CI/CD, and cost. Several skills ship stdlib Python validators (no dependencies).
+Multi-cloud DevOps workflows across 16 skills covering infrastructure-as-code, Kubernetes, containers, GitOps, cloud IAM, CI/CD, cost, and architecture diagrams. Several skills ship stdlib Python validators (no dependencies).
 
 | Domain | Skills |
 |--------|--------|
@@ -92,6 +91,7 @@ Multi-cloud DevOps workflows across 15 skills covering infrastructure-as-code, K
 | **Containers / GitOps** | `docker-workflows` (Dockerfile static analysis, compose validation), `argocd-operations` (ApplicationSets, GitOps posture) |
 | **Cloud** | `gcp-iam` (inheritance, impersonation), `cloud-storage-identification` (S3-compatible provider ID), `cloudflare-dns-zones`, `cloudflare-workers`, `cloudflare-cf-cli`, `cloudflare-access-mcp` |
 | **CI/CD & cost** | `github-actions-pipelines` (OIDC, hardening, reusable workflows), `aws-codepipeline-codebuild`, `aws-cost-investigation` (Cost Explorer + CUR) |
+| **Diagrams** | `drawio-diagramming` (native .drawio generation, draw.io MCP servers, architecture/HLA method) |
 
 **Install:**
 ```bash
@@ -102,30 +102,9 @@ Multi-cloud DevOps workflows across 15 skills covering infrastructure-as-code, K
 
 ---
 
-### do-registry-cleanup
-
-Analyze and clean DigitalOcean Container Registry images. Requires `doctl` CLI.
-
-| Feature | Description |
-|---------|-------------|
-| **Analyze** | List all repos with tag counts, dates, and latest tags |
-| **Clean** | Delete old tags, keep newest N per repo |
-| **Dry Run** | Preview what would be deleted before executing |
-| **Stale** | Find repos not updated in N months |
-| **GC** | Trigger garbage collection to reclaim storage |
-
-**Install:**
-```bash
-/plugin install do-registry-cleanup@claude-registry
-```
-
-**Triggers:** "clean registry", "delete old images", "DO registry", "registry cleanup"
-
----
-
 ### digitalocean-skills
 
-DigitalOcean operations skills. Two skills: `digitalocean-dns-zones` (DNS management) and `digitalocean-app-platform` (App Platform spec linter).
+DigitalOcean operations skills. Three skills: `digitalocean-dns-zones` (DNS management), `digitalocean-app-platform` (App Platform spec linter), and `digitalocean-registry-cleanup` (Container Registry hygiene).
 
 **`digitalocean-dns-zones`** — managing DNS via `doctl`, the DigitalOcean API v2, and the `digitalocean` Terraform provider.
 
@@ -146,12 +125,22 @@ DigitalOcean operations skills. Two skills: `digitalocean-dns-zones` (DNS manage
 | **Correctness checks** | Port mismatches, overlapping ingress routes, conflicting git/image sources, deprecated routes |
 | **Sizing checks** | Unknown instance size slugs, app/database region mismatch |
 
+**`digitalocean-registry-cleanup`** — analyze and clean DigitalOcean Container Registry images (requires `doctl`).
+
+| Feature | Description |
+|---------|-------------|
+| **Analyze** | List all repos with tag counts, dates, and latest tags |
+| **Clean** | Delete old tags, keep newest N per repo |
+| **Dry Run** | Preview what would be deleted before executing |
+| **Stale** | Find repos not updated in N months |
+| **GC** | Trigger garbage collection to reclaim storage |
+
 **Install:**
 ```bash
 /plugin install digitalocean-skills@claude-registry
 ```
 
-**Triggers:** "DigitalOcean DNS", "doctl domain records", "digitalocean_record", "apex CNAME on DO", "wildcard cert DigitalOcean", "DigitalOcean App Platform", "app.yaml", "doctl apps", "digitalocean_app", "app spec lint"
+**Triggers:** "DigitalOcean DNS", "doctl domain records", "digitalocean_record", "apex CNAME on DO", "wildcard cert DigitalOcean", "DigitalOcean App Platform", "app.yaml", "doctl apps", "digitalocean_app", "app spec lint", "clean registry", "delete old images", "registry cleanup"
 
 ---
 
@@ -246,9 +235,8 @@ claude-registry/
 │   └── marketplace.json       # Marketplace definition (authoritative plugin list)
 └── plugins/
     ├── claude-md-optimizer/   # CLAUDE.md auditing & optimization
-    ├── devops-skills/         # 15 multi-cloud DevOps skills (IaC, k8s, CI/CD, cost)
-    ├── digitalocean-skills/   # DigitalOcean DNS zones + App Platform linter
-    ├── do-registry-cleanup/   # DO Container Registry cleanup
+    ├── devops-skills/         # 16 multi-cloud DevOps skills (IaC, k8s, CI/CD, cost, diagrams)
+    ├── digitalocean-skills/   # DigitalOcean DNS zones, App Platform linter, registry cleanup
     ├── setup-project-skills/  # Install curated skills into a project
     ├── mindfulness-mentor/    # Developer mindfulness exercises
     ├── cloudflare/            # Curated upstream: Cloudflare platform skills

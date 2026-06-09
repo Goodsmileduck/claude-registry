@@ -66,35 +66,6 @@
       "category": "wellness"
     },
     {
-      "name": "do-registry-cleanup",
-      "source": {
-        "source": "github",
-        "repo": "Goodsmileduck/claude-registry"
-      },
-      "skills": [
-        "./plugins/do-registry-cleanup/skills/do-registry-cleanup"
-      ],
-      "description": "Analyze and clean DigitalOcean Container Registry images. Lists repos with tag counts, deletes old tags (keep last N), finds stale repos, triggers garbage collection. Supports dry-run mode.",
-      "version": "1.0.0",
-      "author": {
-        "name": "Stanislav Serebrennikov",
-        "url": "https://github.com/Goodsmileduck"
-      },
-      "homepage": "https://github.com/Goodsmileduck/claude-registry",
-      "repository": "https://github.com/Goodsmileduck/claude-registry",
-      "license": "MIT",
-      "keywords": [
-        "digitalocean",
-        "docker",
-        "container-registry",
-        "cleanup",
-        "devops",
-        "infrastructure",
-        "doctl"
-      ],
-      "category": "devops"
-    },
-    {
       "name": "devops-skills",
       "source": {
         "source": "github",
@@ -110,7 +81,7 @@
         "./plugins/devops-skills/skills/cloudflare-dns-zones",
         "./plugins/devops-skills/skills/cloudflare-workers",
         "./plugins/devops-skills/skills/docker-workflows",
-        "./plugins/devops-skills/skills/drawio",
+        "./plugins/devops-skills/skills/drawio-diagramming",
         "./plugins/devops-skills/skills/gcp-iam",
         "./plugins/devops-skills/skills/github-actions-pipelines",
         "./plugins/devops-skills/skills/kubernetes-operations",
@@ -160,10 +131,11 @@
       },
       "skills": [
         "./plugins/digitalocean-skills/skills/digitalocean-app-platform",
-        "./plugins/digitalocean-skills/skills/digitalocean-dns-zones"
+        "./plugins/digitalocean-skills/skills/digitalocean-dns-zones",
+        "./plugins/digitalocean-skills/skills/digitalocean-registry-cleanup"
       ],
-      "description": "DigitalOcean operations skills. DNS zones: domain/record CRUD via doctl and the DigitalOcean Terraform provider, apex CNAME / no-flattening trap when migrating from Cloudflare, FQDN trailing-dot semantics, DNS-01 ACME wildcard certs, nameserver delegation. App Platform: lints app specs (app.yaml / doctl apps spec JSON / digitalocean_app Terraform) for plaintext secrets, missing health checks, single-instance services, dev databases in production, port mismatches, overlapping ingress routes, conflicting git/image sources, deprecated routes, unknown instance sizes, and app/database region mismatch.",
-      "version": "0.2.0",
+      "description": "DigitalOcean operations skills. DNS zones: domain/record CRUD via doctl and the DigitalOcean Terraform provider, apex CNAME / no-flattening trap when migrating from Cloudflare, FQDN trailing-dot semantics, DNS-01 ACME wildcard certs, nameserver delegation. App Platform: lints app specs (app.yaml / doctl apps spec JSON / digitalocean_app Terraform) for plaintext secrets, missing health checks, single-instance services, dev databases in production, port mismatches, overlapping ingress routes, conflicting git/image sources, deprecated routes, unknown instance sizes, and app/database region mismatch. Container Registry: analyze and clean registry images — list repos with tag counts, delete old tags (keep last N), find stale repos, trigger garbage collection, with dry-run support.",
+      "version": "0.3.0",
       "author": {
         "name": "Stanislav Serebrennikov",
         "url": "https://github.com/Goodsmileduck"
@@ -189,7 +161,10 @@
         "digitalocean_app",
         "app-yaml",
         "doctl-apps",
-        "app-platform-lint"
+        "app-platform-lint",
+        "container-registry",
+        "registry-cleanup",
+        "docker"
       ],
       "category": "devops"
     },

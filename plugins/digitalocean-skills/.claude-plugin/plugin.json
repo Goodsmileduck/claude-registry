@@ -1,7 +1,7 @@
 {
   "name": "digitalocean-skills",
-  "version": "0.2.0",
-  "description": "DigitalOcean operations skills. DNS zones: domain/record CRUD via doctl and the DigitalOcean Terraform provider, apex CNAME / no-flattening trap when migrating from Cloudflare, FQDN trailing-dot semantics, DNS-01 ACME wildcard certs, nameserver delegation. App Platform: lints app specs (app.yaml / doctl apps spec JSON / digitalocean_app Terraform) for plaintext secrets, missing health checks, single-instance services, dev databases in production, port mismatches, overlapping ingress routes, conflicting git/image sources, deprecated routes, unknown instance sizes, and app/database region mismatch.",
+  "version": "0.3.0",
+  "description": "DigitalOcean operations skills. DNS zones: domain/record CRUD via doctl and the DigitalOcean Terraform provider, apex CNAME / no-flattening trap when migrating from Cloudflare, FQDN trailing-dot semantics, DNS-01 ACME wildcard certs, nameserver delegation. App Platform: lints app specs (app.yaml / doctl apps spec JSON / digitalocean_app Terraform) for plaintext secrets, missing health checks, single-instance services, dev databases in production, port mismatches, overlapping ingress routes, conflicting git/image sources, deprecated routes, unknown instance sizes, and app/database region mismatch. Container Registry: analyze and clean registry images — list repos with tag counts, delete old tags (keep last N), find stale repos, trigger garbage collection, with dry-run support.",
   "author": {
     "name": "Stanislav Serebrennikov",
     "url": "https://github.com/Goodsmileduck"
@@ -27,6 +27,9 @@
     "digitalocean_app",
     "app-yaml",
     "doctl-apps",
-    "app-platform-lint"
+    "app-platform-lint",
+    "container-registry",
+    "registry-cleanup",
+    "docker"
   ]
 }
