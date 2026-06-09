@@ -20,3 +20,6 @@ Thumbs.db
 node_modules/
 plan.md
 CLAUDE.md
+
+# Superpowers working docs (specs/plans/research) — local scaffolding, not published
+docs/superpowers/

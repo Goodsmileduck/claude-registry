@@ -19,8 +19,13 @@ Discover, install, and share plugins that enhance your Claude Code experience. F
 - [Quick Start](#quick-start)
 - [Available Plugins](#available-plugins)
   - [claude-md-optimizer](#claude-md-optimizer)
+  - [devops-skills](#devops-skills)
   - [do-registry-cleanup](#do-registry-cleanup)
   - [digitalocean-skills](#digitalocean-skills)
+  - [setup-project-skills](#setup-project-skills)
+  - [mindfulness-mentor](#mindfulness-mentor)
+  - [cloudflare](#cloudflare)
+  - [vercel-react-skills](#vercel-react-skills)
 - [Installation](#installation)
 - [Repository Structure](#repository-structure)
 - [Contributing](#contributing)
@@ -73,6 +78,29 @@ Analyzes and optimizes CLAUDE.md files following Anthropic's official best pract
 ```bash
 /claude-md-optimizer
 ```
+
+---
+
+### devops-skills
+
+Multi-cloud DevOps workflows across 15 skills covering infrastructure-as-code, Kubernetes, containers, GitOps, cloud IAM, CI/CD, and cost. Several skills ship stdlib Python validators (no dependencies).
+
+| Domain | Skills |
+|--------|--------|
+| **IaC** | `terraform-workflows` (plan review, drift, state surgery), `terragrunt-workflows` (CLI redesign, stacks, `run --all`) |
+| **Kubernetes** | `kubernetes-operations` (pod debugging), `kubernetes-operators` (CRD design, reconcile-loop linting, OperatorHub audit) |
+| **Containers / GitOps** | `docker-workflows` (Dockerfile static analysis, compose validation), `argocd-operations` (ApplicationSets, GitOps posture) |
+| **Cloud** | `gcp-iam` (inheritance, impersonation), `cloud-storage-identification` (S3-compatible provider ID), `cloudflare-dns-zones`, `cloudflare-workers`, `cloudflare-cf-cli`, `cloudflare-access-mcp` |
+| **CI/CD & cost** | `github-actions-pipelines` (OIDC, hardening, reusable workflows), `aws-codepipeline-codebuild`, `aws-cost-investigation` (Cost Explorer + CUR) |
+
+**Install:**
+```bash
+/plugin install devops-skills@claude-registry
+```
+
+**Triggers:** "terraform plan", "terragrunt", "kubectl", "CRD / operator", "Dockerfile", "ArgoCD", "GCP IAM", "GitHub Actions OIDC", "CodePipeline", "AWS cost", "Cloudflare DNS / Workers"
+
+---
 
 ### do-registry-cleanup
 
@@ -127,6 +155,58 @@ DigitalOcean operations skills. Two skills: `digitalocean-dns-zones` (DNS manage
 
 ---
 
+### setup-project-skills
+
+Installs skills from a user-curated manifest (`~/.claude/skill-manifest.json`) into a project's `.claude/skills/` — symlinks local skills, runs `npx skills add` for third-party ones, and advises `/plugin install` for native Claude plugins. Can scan the project for trigger files (Dockerfile, `wrangler.jsonc`, `*.tf`, …) and pre-select recommended matches. Ships a starter `skill-manifest.example.json`.
+
+**Install:**
+```bash
+/plugin install setup-project-skills@claude-registry
+```
+
+**Triggers:** "set up skills in this project", "add a skill I curated", "bootstrap a freshly cloned repo with my toolbox"
+
+---
+
+### mindfulness-mentor
+
+Guides developers through mindfulness exercises and stress-reduction techniques.
+
+**Install:**
+```bash
+/plugin install mindfulness-mentor@claude-registry
+```
+
+**Triggers:** "taking a break", "feeling overwhelmed", "debugging frustration", "need to refocus"
+
+---
+
+### cloudflare
+
+Curated upstream — Cloudflare's official platform skills: Workers, Pages, KV/D1/R2, Workers AI, Vectorize, Agents SDK, Tunnel, Spectrum, WAF, DDoS, Terraform, and Pulumi. Includes the `wrangler`, `agents-sdk`, `durable-objects`, `sandbox-sdk`, `web-perf`, `building-mcp-server-on-cloudflare`, `building-ai-agent-on-cloudflare`, and `cloudflare-email-service` skills.
+
+**Install:**
+```bash
+/plugin install cloudflare@claude-registry
+```
+
+**Triggers:** "Cloudflare Workers", "wrangler", "Durable Objects", "KV / D1 / R2", "Workers AI", "Cloudflare email"
+
+---
+
+### vercel-react-skills
+
+Curated upstream — Vercel-Labs React/Next.js skills: performance best practices, composition patterns (compound components, render props), and React Native / Expo conventions for mobile.
+
+**Install:**
+```bash
+/plugin install vercel-react-skills@claude-registry
+```
+
+**Triggers:** "React performance", "Next.js best practices", "compound components", "React Native / Expo"
+
+---
+
 ## Installation
 
 ### Option 1: Marketplace Install (Recommended)
@@ -162,25 +242,21 @@ git clone https://github.com/Goodsmileduck/claude-registry.git
 ```
 claude-registry/
 ├── .claude-plugin/
-│   ├── plugin.json           # Root plugin manifest
-│   └── marketplace.json      # Marketplace definition
+│   ├── plugin.json            # Root plugin manifest
+│   └── marketplace.json       # Marketplace definition (authoritative plugin list)
 └── plugins/
-    ├── claude-md-optimizer/  # CLAUDE.md optimization plugin
-    │   ├── .claude-plugin/
-    │   │   └── plugin.json
-    │   └── skills/
-    │       └── claude-md-optimizer/
-    │           ├── SKILL.md
-    │           └── references/
-    │               └── best-practices.md
-    └── do-registry-cleanup/  # DO Container Registry cleanup
-        ├── .claude-plugin/
-        │   └── plugin.json
-        └── skills/
-            └── do-registry-cleanup/
-                ├── SKILL.md
-                └── scripts/
-                    └── registry_cleanup.py
+    ├── claude-md-optimizer/   # CLAUDE.md auditing & optimization
+    ├── devops-skills/         # 15 multi-cloud DevOps skills (IaC, k8s, CI/CD, cost)
+    ├── digitalocean-skills/   # DigitalOcean DNS zones + App Platform linter
+    ├── do-registry-cleanup/   # DO Container Registry cleanup
+    ├── setup-project-skills/  # Install curated skills into a project
+    ├── mindfulness-mentor/    # Developer mindfulness exercises
+    ├── cloudflare/            # Curated upstream: Cloudflare platform skills
+    └── vercel-react-skills/   # Curated upstream: Vercel React/Next.js skills
+
+# Each plugins/<name>/ contains:
+#   .claude-plugin/plugin.json   — plugin manifest
+#   skills/<skill>/SKILL.md      — one or more skills (+ optional references/, scripts/, evals/)
 ```
 
 ---
