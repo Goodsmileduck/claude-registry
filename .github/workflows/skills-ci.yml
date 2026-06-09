@@ -1,0 +1,72 @@
+name: skills-ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+  pull-requests: write
+concurrency:
+  group: skills-ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Lint skills against best practices
+        id: lint
+        run: |
+          python scripts/lint_skills.py --format json > lint-report.json \
+            || echo "lint_failed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Compile all skill scripts (syntax gate)
+        run: python -m compileall -q plugins scripts
+
+      - name: Run skill validator tests
+        run: |
+          # unittest's package-based discovery can't span the non-package scripts
+          # dirs from one root, so discover per directory that holds test_*.py.
+          fail=0
+          for d in $(find . -name 'test_*.py' -not -path '*/node_modules/*' -printf '%h\n' | sort -u); do
+            echo "::group::tests in $d"
+            python -m unittest discover -s "$d" -p 'test_*.py' -t "$d" || fail=1
+            echo "::endgroup::"
+          done
+          exit $fail
+
+      - name: Post / update PR summary comment
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let findings = [];
+            try { findings = JSON.parse(fs.readFileSync('lint-report.json', 'utf8')); } catch (e) {}
+            const marker = '<!-- skills-ci -->';
+            let body = marker + '\n## 🧭 Skills best-practices lint\n\n';
+            if (findings.length === 0) {
+              body += '✅ All skills pass the mechanical best-practices rules.\n';
+            } else {
+              body += `⚠️ ${findings.length} finding(s):\n\n| Path | Rule | Message |\n|---|---|---|\n`;
+              for (const f of findings) {
+                body += `| \`${f.path}\` | \`${f.rule}\` | ${f.message} |\n`;
+              }
+            }
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: context.issue.number });
+            const existing = comments.find(c => c.body.includes(marker));
+            const args = { owner: context.repo.owner, repo: context.repo.repo, body };
+            if (existing) await github.rest.issues.updateComment({ ...args, comment_id: existing.id });
+            else await github.rest.issues.createComment({ ...args, issue_number: context.issue.number });
+
+      - name: Fail if lint found violations
+        if: always() && steps.lint.outputs.lint_failed == 'true'
+        run: |
+          echo "::error::Skill best-practices lint found violations (see PR comment / job log)."
+          exit 1
