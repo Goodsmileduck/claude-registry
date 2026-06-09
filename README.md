@@ -261,6 +261,11 @@ claude-registry/
 ├── .claude-plugin/
 │   ├── plugin.json            # Root plugin manifest
 │   └── marketplace.json       # Marketplace definition (authoritative plugin list)
+├── .github/workflows/
+│   └── skills-ci.yml          # CI: best-practices lint + script security audit on every PR
+├── scripts/
+│   ├── lint_skills.py         # Stdlib best-practices linter (frontmatter, naming, manifests)
+│   └── audit_skill_scripts.py # Stdlib AST audit for code-execution risks in skill scripts
 └── plugins/
     ├── claude-md-optimizer/     # CLAUDE.md auditing & optimization
     ├── iac-skills/              # Terraform, Terragrunt, storage identification
@@ -290,6 +295,13 @@ Contributions are welcome! If you have a plugin idea or want to share your workf
 3. Add proper `.claude-plugin/plugin.json` manifest
 4. Add entry to `.claude-plugin/marketplace.json`
 5. Submit a Pull Request
+
+Every PR runs `skills-ci`, which lints skills against the [authoring rules](CLAUDE.md) (frontmatter, naming, manifest consistency) and audits skill scripts for code-execution risks. Run the checks locally first:
+
+```bash
+python3 scripts/lint_skills.py          # best-practices lint
+python3 scripts/audit_skill_scripts.py  # script security audit
+```
 
 ### Plugin Requirements
 
