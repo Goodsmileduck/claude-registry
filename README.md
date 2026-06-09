@@ -19,7 +19,7 @@ Discover, install, and share plugins that enhance your Claude Code experience. F
 - [Quick Start](#quick-start)
 - [Available Plugins](#available-plugins)
   - [claude-md-optimizer](#claude-md-optimizer)
-  - [devops-skills](#devops-skills)
+  - [DevOps skill plugins](#devops-skill-plugins) (iac, kubernetes, cicd, cloud-platform, diagramming)
   - [digitalocean-skills](#digitalocean-skills)
   - [setup-project-skills](#setup-project-skills)
   - [mindfulness-mentor](#mindfulness-mentor)
@@ -80,25 +80,53 @@ Analyzes and optimizes CLAUDE.md files following Anthropic's official best pract
 
 ---
 
-### devops-skills
+### DevOps skill plugins
 
-Multi-cloud DevOps workflows across 16 skills covering infrastructure-as-code, Kubernetes, containers, GitOps, cloud IAM, CI/CD, cost, and architecture diagrams. Several skills ship stdlib Python validators (no dependencies).
+The DevOps skills are split into five focused plugins. Many ship stdlib Python validators (no dependencies). Install only what a project needs.
 
-| Domain | Skills |
-|--------|--------|
-| **IaC** | `terraform-workflows` (plan review, drift, state surgery), `terragrunt-workflows` (CLI redesign, stacks, `run --all`) |
-| **Kubernetes** | `kubernetes-operations` (pod debugging), `kubernetes-operators` (CRD design, reconcile-loop linting, OperatorHub audit) |
-| **Containers / GitOps** | `docker-workflows` (Dockerfile static analysis, compose validation), `argocd-operations` (ApplicationSets, GitOps posture) |
-| **Cloud** | `gcp-iam` (inheritance, impersonation), `cloud-storage-identification` (S3-compatible provider ID), `cloudflare-dns-zones`, `cloudflare-workers`, `cloudflare-cf-cli`, `cloudflare-access-mcp` |
-| **CI/CD & cost** | `github-actions-pipelines` (OIDC, hardening, reusable workflows), `aws-codepipeline-codebuild`, `aws-cost-investigation` (Cost Explorer + CUR) |
-| **Diagrams** | `drawio-diagramming` (native .drawio generation, draw.io MCP servers, architecture/HLA method) |
+**`iac-skills`** — Infrastructure-as-code.
 
-**Install:**
+| Skill | Covers |
+|-------|--------|
+| `terraform-workflows` | Plan review, drift, state surgery (mv/rm/import), provider upgrades |
+| `terragrunt-workflows` | CLI-redesign migration, config composition, `run --all`, stacks |
+| `cloud-storage-identification` | Identify S3-compatible object-storage providers |
+
+**`kubernetes-skills`** — Kubernetes operations & GitOps.
+
+| Skill | Covers |
+|-------|--------|
+| `kubernetes-operations` | Pod/workload debugging |
+| `kubernetes-operators` | CRD design, reconcile-loop linting, OperatorHub audit |
+| `argocd-operations` | ApplicationSets, GitOps posture |
+| `docker-workflows` | Dockerfile static analysis, Compose validation |
+
+**`cicd-skills`** — CI/CD pipelines.
+
+| Skill | Covers |
+|-------|--------|
+| `github-actions-pipelines` | OIDC, permissions hardening, reusable workflows, `pull_request_target` security |
+| `aws-codepipeline-codebuild` | Pipeline v1/v2, CodeStar Connections, buildspec, IAM roles, ECR/VPC builds |
+
+**`cloud-platform-skills`** — Cloud provider operations.
+
+| Skill | Covers |
+|-------|--------|
+| `gcp-iam` | Inheritance, impersonation |
+| `aws-cost-investigation` | Cost Explorer + CUR, anomaly detection, Savings Plans vs RIs |
+| `cloudflare-dns-zones` | DNS records via REST |
+| `cloudflare-workers` | Workers/wrangler configuration, bindings |
+| `cloudflare-cf-cli` | The `cf` unified CLI (preview) |
+| `cloudflare-access-mcp` | Zero Trust Access for remote MCP servers |
+
+**`diagramming-skills`** — `drawio-diagramming`: native `.drawio` generation, draw.io MCP servers, and an architecture/HLA method for infra & Kubernetes topology.
+
+**Install (example):**
 ```bash
-/plugin install devops-skills@claude-registry
+/plugin install kubernetes-skills@claude-registry
 ```
 
-**Triggers:** "terraform plan", "terragrunt", "kubectl", "CRD / operator", "Dockerfile", "ArgoCD", "GCP IAM", "GitHub Actions OIDC", "CodePipeline", "AWS cost", "Cloudflare DNS / Workers"
+**Triggers:** "terraform plan", "terragrunt", "kubectl", "CRD / operator", "Dockerfile", "ArgoCD", "GCP IAM", "GitHub Actions OIDC", "CodePipeline", "AWS cost", "Cloudflare DNS / Workers", "draw.io diagram"
 
 ---
 
@@ -234,13 +262,17 @@ claude-registry/
 │   ├── plugin.json            # Root plugin manifest
 │   └── marketplace.json       # Marketplace definition (authoritative plugin list)
 └── plugins/
-    ├── claude-md-optimizer/   # CLAUDE.md auditing & optimization
-    ├── devops-skills/         # 16 multi-cloud DevOps skills (IaC, k8s, CI/CD, cost, diagrams)
-    ├── digitalocean-skills/   # DigitalOcean DNS zones, App Platform linter, registry cleanup
-    ├── setup-project-skills/  # Install curated skills into a project
-    ├── mindfulness-mentor/    # Developer mindfulness exercises
-    ├── cloudflare/            # Curated upstream: Cloudflare platform skills
-    └── vercel-react-skills/   # Curated upstream: Vercel React/Next.js skills
+    ├── claude-md-optimizer/     # CLAUDE.md auditing & optimization
+    ├── iac-skills/              # Terraform, Terragrunt, storage identification
+    ├── kubernetes-skills/       # k8s ops, operators, ArgoCD, Docker
+    ├── cicd-skills/             # GitHub Actions, AWS CodePipeline/CodeBuild
+    ├── cloud-platform-skills/   # GCP IAM, AWS cost, Cloudflare platform
+    ├── diagramming-skills/      # draw.io architecture diagrams
+    ├── digitalocean-skills/     # DigitalOcean DNS, App Platform linter, registry cleanup
+    ├── setup-project-skills/    # Install curated skills into a project
+    ├── mindfulness-mentor/      # Developer mindfulness exercises
+    ├── cloudflare/              # Curated upstream: Cloudflare platform skills
+    └── vercel-react-skills/     # Curated upstream: Vercel React/Next.js skills
 
 # Each plugins/<name>/ contains:
 #   .claude-plugin/plugin.json   — plugin manifest

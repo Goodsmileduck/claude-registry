@@ -1,0 +1,20 @@
+{
+  "name": "diagramming-skills",
+  "version": "0.1.0",
+  "description": "draw.io diagram authoring: native .drawio file generation, the draw.io MCP servers, and an architecture/HLA method for infrastructure & Kubernetes topology (semantic edge routing, comb-bus/ladder/rail layouts, icon and color conventions). Ships a reusable Python generator.",
+  "author": {
+    "name": "Stanislav Serebrennikov",
+    "url": "https://github.com/Goodsmileduck"
+  },
+  "homepage": "https://github.com/Goodsmileduck/claude-registry",
+  "repository": "https://github.com/Goodsmileduck/claude-registry",
+  "license": "MIT",
+  "keywords": [
+    "drawio",
+    "diagrams",
+    "architecture-diagrams",
+    "hla",
+    "infrastructure-diagrams",
+    "mermaid"
+  ]
+}

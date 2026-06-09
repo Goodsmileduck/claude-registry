@@ -14,7 +14,7 @@ Most "operator bugs" are reconcile-loop bugs, not Kubernetes bugs: missing final
 Run the analyzers first — they're stdlib Python, fast, and surface most routine issues:
 
 ```bash
-SKILL=plugins/devops-skills/skills/kubernetes-operators
+SKILL=plugins/kubernetes-skills/skills/kubernetes-operators
 
 python3 "$SKILL/scripts/crd_validator.py"            --crd config/crd/
 python3 "$SKILL/scripts/reconcile_lint.py"           --controller controllers/

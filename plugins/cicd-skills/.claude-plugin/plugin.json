@@ -1,0 +1,23 @@
+{
+  "name": "cicd-skills",
+  "version": "0.1.0",
+  "description": "CI/CD pipelines: GitHub Actions (OIDC federation, permissions hardening, deploy concurrency, reusable workflows, pull_request_target security) and AWS CodePipeline + CodeBuild (pipeline v1/v2, CodeStar Connections, buildspec authoring, IAM service roles, ECR/VPC builds, caching).",
+  "author": {
+    "name": "Stanislav Serebrennikov",
+    "url": "https://github.com/Goodsmileduck"
+  },
+  "homepage": "https://github.com/Goodsmileduck/claude-registry",
+  "repository": "https://github.com/Goodsmileduck/claude-registry",
+  "license": "MIT",
+  "keywords": [
+    "ci-cd",
+    "github-actions",
+    "oidc",
+    "reusable-workflows",
+    "codepipeline",
+    "codebuild",
+    "buildspec",
+    "aws",
+    "deploy"
+  ]
+}

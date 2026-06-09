@@ -5,91 +5,91 @@
     {
       "name": "terraform-workflows",
       "source": "local-symlink",
-      "path": "~/local/personal/claude-registry/plugins/devops-skills/skills/terraform-workflows",
+      "path": "~/local/personal/claude-registry/plugins/plugins/iac-skills/skills/terraform-workflows",
       "tags": ["terraform", "opentofu", "iac"],
       "detect": ["**/*.tf", "**/*.tofu", "**/terraform.tfvars*"]
     },
     {
       "name": "terragrunt-workflows",
       "source": "local-symlink",
-      "path": "~/local/personal/claude-registry/plugins/devops-skills/skills/terragrunt-workflows",
+      "path": "~/local/personal/claude-registry/plugins/plugins/iac-skills/skills/terragrunt-workflows",
       "tags": ["terragrunt", "iac"],
       "detect": ["**/terragrunt.hcl", "**/root.hcl"]
     },
     {
       "name": "kubernetes-operations",
       "source": "local-symlink",
-      "path": "~/local/personal/claude-registry/plugins/devops-skills/skills/kubernetes-operations",
+      "path": "~/local/personal/claude-registry/plugins/plugins/kubernetes-skills/skills/kubernetes-operations",
       "tags": ["kubernetes", "k8s"],
       "detect": ["**/kustomization.{yaml,yml}", "**/Chart.yaml", "**/*.k8s.{yaml,yml}", "kubeconfig"]
     },
     {
       "name": "kubernetes-operators",
       "source": "local-symlink",
-      "path": "~/local/personal/claude-registry/plugins/devops-skills/skills/kubernetes-operators",
+      "path": "~/local/personal/claude-registry/plugins/plugins/kubernetes-skills/skills/kubernetes-operators",
       "tags": ["kubernetes", "operator", "crd", "controller-runtime"],
       "detect": ["**/PROJECT", "**/api/v*/*_types.go", "**/config/crd/**"]
     },
     {
       "name": "docker-workflows",
       "source": "local-symlink",
-      "path": "~/local/personal/claude-registry/plugins/devops-skills/skills/docker-workflows",
+      "path": "~/local/personal/claude-registry/plugins/plugins/kubernetes-skills/skills/docker-workflows",
       "tags": ["docker", "containers"],
       "detect": ["Dockerfile", "**/Dockerfile*", "docker-compose.{yaml,yml}", "compose.{yaml,yml}"]
     },
     {
       "name": "argocd-operations",
       "source": "local-symlink",
-      "path": "~/local/personal/claude-registry/plugins/devops-skills/skills/argocd-operations",
+      "path": "~/local/personal/claude-registry/plugins/plugins/kubernetes-skills/skills/argocd-operations",
       "tags": ["argocd", "gitops"],
       "detect": ["**/argocd/**", "**/Application.yaml", "**/ApplicationSet.yaml"]
     },
     {
       "name": "gcp-iam",
       "source": "local-symlink",
-      "path": "~/local/personal/claude-registry/plugins/devops-skills/skills/gcp-iam",
+      "path": "~/local/personal/claude-registry/plugins/plugins/cloud-platform-skills/skills/gcp-iam",
       "tags": ["gcp", "iam"],
       "detect": ["**/*.tf:google_", "gcloud", "**/service-account*.json"]
     },
     {
       "name": "cloud-storage-identification",
       "source": "local-symlink",
-      "path": "~/local/personal/claude-registry/plugins/devops-skills/skills/cloud-storage-identification",
+      "path": "~/local/personal/claude-registry/plugins/plugins/iac-skills/skills/cloud-storage-identification",
       "tags": ["s3", "r2", "gcs", "object-storage"],
       "detect": ["**/*.tf:aws_s3_bucket", "**/*.tf:google_storage_bucket", "**/*.tf:cloudflare_r2_bucket"]
     },
     {
       "name": "github-actions-pipelines",
       "source": "local-symlink",
-      "path": "~/local/personal/claude-registry/plugins/devops-skills/skills/github-actions-pipelines",
+      "path": "~/local/personal/claude-registry/plugins/plugins/cicd-skills/skills/github-actions-pipelines",
       "tags": ["github-actions", "ci-cd"],
       "detect": [".github/workflows/*.{yml,yaml}"]
     },
     {
       "name": "cloudflare-dns-zones",
       "source": "local-symlink",
-      "path": "~/local/personal/claude-registry/plugins/devops-skills/skills/cloudflare-dns-zones",
+      "path": "~/local/personal/claude-registry/plugins/plugins/cloud-platform-skills/skills/cloudflare-dns-zones",
       "tags": ["cloudflare", "dns"],
       "detect": ["**/*.tf:cloudflare_record", "**/*.tf:cloudflare_zone"]
     },
     {
       "name": "cloudflare-cf-cli",
       "source": "local-symlink",
-      "path": "~/local/personal/claude-registry/plugins/devops-skills/skills/cloudflare-cf-cli",
+      "path": "~/local/personal/claude-registry/plugins/plugins/cloud-platform-skills/skills/cloudflare-cf-cli",
       "tags": ["cloudflare", "workers", "cf-cli"],
       "detect": ["wrangler.{json,jsonc,toml}", "**/workers.{js,ts}", "**/.dev.vars"]
     },
     {
       "name": "aws-codepipeline-codebuild",
       "source": "local-symlink",
-      "path": "~/local/personal/claude-registry/plugins/devops-skills/skills/aws-codepipeline-codebuild",
+      "path": "~/local/personal/claude-registry/plugins/plugins/cicd-skills/skills/aws-codepipeline-codebuild",
       "tags": ["aws", "ci-cd"],
       "detect": ["buildspec.{yml,yaml}", "**/*.tf:aws_codepipeline", "**/*.tf:aws_codebuild_project"]
     },
     {
       "name": "aws-cost-investigation",
       "source": "local-symlink",
-      "path": "~/local/personal/claude-registry/plugins/devops-skills/skills/aws-cost-investigation",
+      "path": "~/local/personal/claude-registry/plugins/plugins/cloud-platform-skills/skills/aws-cost-investigation",
       "tags": ["aws", "finops"],
       "detect": ["**/cost-explorer*", "**/cur-*", "**/billing*"]
     },

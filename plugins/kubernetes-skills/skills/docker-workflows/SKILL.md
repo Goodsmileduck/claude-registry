@@ -12,7 +12,7 @@ For Kubernetes manifests and pod debugging, see the `kubernetes-operations` skil
 Open with the static analyzers — they're stdlib Python, fast, deterministic:
 
 ```bash
-SKILL=plugins/devops-skills/skills/docker-workflows
+SKILL=plugins/kubernetes-skills/skills/docker-workflows
 python3 "$SKILL/scripts/dockerfile_analyzer.py" Dockerfile
 python3 "$SKILL/scripts/compose_validator.py" docker-compose.yml
 ```
