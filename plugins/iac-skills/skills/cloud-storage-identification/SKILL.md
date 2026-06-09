@@ -1,6 +1,6 @@
 ---
 name: cloud-storage-identification
-description: Identifies which object-storage provider an S3-compatible target actually hits, from endpoint URLs, env vars, or Terraform provider blocks. Prevents AWS-default assumptions on GCS/DO Spaces/R2/Hetzner/B2/Wasabi/MinIO. Use when working with boto3, `aws_s3_bucket`, rclone, s3cmd, or S3-compatible storage.
+description: Identifies which object-storage provider an S3-compatible target actually hits, from endpoint URLs, env vars, or Terraform provider blocks. Prevents AWS-default assumptions on GCS/DO Spaces/R2/Hetzner/B2/MinIO. Use when working with boto3, `aws_s3_bucket`, rclone, s3cmd, or S3-compatible storage.
 ---
 
 # Cloud Object Storage — provider identification
