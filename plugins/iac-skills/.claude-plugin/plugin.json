@@ -1,0 +1,24 @@
+{
+  "name": "iac-skills",
+  "version": "0.1.0",
+  "description": "Infrastructure-as-code workflows: Terraform/OpenTofu plan review, drift detection, state surgery (mv/rm/import) and provider upgrades; Terragrunt CLI-redesign migration, config composition, run --all orchestration and stacks; and S3-compatible object-storage provider identification. Ships stdlib validators.",
+  "author": {
+    "name": "Stanislav Serebrennikov",
+    "url": "https://github.com/Goodsmileduck"
+  },
+  "homepage": "https://github.com/Goodsmileduck/claude-registry",
+  "repository": "https://github.com/Goodsmileduck/claude-registry",
+  "license": "MIT",
+  "keywords": [
+    "terraform",
+    "opentofu",
+    "terragrunt",
+    "iac",
+    "state",
+    "drift",
+    "provider-upgrade",
+    "hcl",
+    "s3",
+    "object-storage"
+  ]
+}

@@ -66,59 +66,17 @@
       "category": "wellness"
     },
     {
-      "name": "do-registry-cleanup",
+      "name": "iac-skills",
       "source": {
         "source": "github",
         "repo": "Goodsmileduck/claude-registry"
       },
       "skills": [
-        "./plugins/do-registry-cleanup/skills/do-registry-cleanup"
+        "./plugins/iac-skills/skills/terraform-workflows",
+        "./plugins/iac-skills/skills/terragrunt-workflows",
+        "./plugins/iac-skills/skills/cloud-storage-identification"
       ],
-      "description": "Analyze and clean DigitalOcean Container Registry images. Lists repos with tag counts, deletes old tags (keep last N), finds stale repos, triggers garbage collection. Supports dry-run mode.",
-      "version": "1.0.0",
-      "author": {
-        "name": "Stanislav Serebrennikov",
-        "url": "https://github.com/Goodsmileduck"
-      },
-      "homepage": "https://github.com/Goodsmileduck/claude-registry",
-      "repository": "https://github.com/Goodsmileduck/claude-registry",
-      "license": "MIT",
-      "keywords": [
-        "digitalocean",
-        "docker",
-        "container-registry",
-        "cleanup",
-        "devops",
-        "infrastructure",
-        "doctl"
-      ],
-      "category": "devops"
-    },
-    {
-      "name": "devops-skills",
-      "source": {
-        "source": "github",
-        "repo": "Goodsmileduck/claude-registry"
-      },
-      "skills": [
-        "./plugins/devops-skills/skills/argocd-operations",
-        "./plugins/devops-skills/skills/aws-codepipeline-codebuild",
-        "./plugins/devops-skills/skills/aws-cost-investigation",
-        "./plugins/devops-skills/skills/cloud-storage-identification",
-        "./plugins/devops-skills/skills/cloudflare-access-mcp",
-        "./plugins/devops-skills/skills/cloudflare-cf-cli",
-        "./plugins/devops-skills/skills/cloudflare-dns-zones",
-        "./plugins/devops-skills/skills/cloudflare-workers",
-        "./plugins/devops-skills/skills/docker-workflows",
-        "./plugins/devops-skills/skills/drawio",
-        "./plugins/devops-skills/skills/gcp-iam",
-        "./plugins/devops-skills/skills/github-actions-pipelines",
-        "./plugins/devops-skills/skills/kubernetes-operations",
-        "./plugins/devops-skills/skills/kubernetes-operators",
-        "./plugins/devops-skills/skills/terraform-workflows",
-        "./plugins/devops-skills/skills/terragrunt-workflows"
-      ],
-      "description": "Multi-cloud DevOps workflows across 15 skills: Terraform/OpenTofu plan review and state surgery, Terragrunt CLI redesign and stacks, Kubernetes day-to-day operations, Kubernetes Operators (CRD/reconcile/OperatorHub), Docker workflows, ArgoCD ApplicationSets and GitOps posture, GCP IAM inheritance and impersonation, S3-compatible storage identification, GitHub Actions OIDC and reusable workflows, Cloudflare DNS zones (REST), Cloudflare Zero Trust Access for remote MCP servers, Cloudflare Workers, Cloudflare `cf` unified CLI (preview), AWS CodePipeline + CodeBuild, AWS cost investigation (Cost Explorer + CUR). Covers AWS, GCP, DigitalOcean, Azure, Cloudflare.",
+      "description": "Infrastructure-as-code workflows: Terraform/OpenTofu plan review, drift detection, state surgery (mv/rm/import) and provider upgrades; Terragrunt CLI-redesign migration, config composition, run --all orchestration and stacks; and S3-compatible object-storage provider identification. Ships stdlib validators.",
       "version": "0.1.0",
       "author": {
         "name": "Stanislav Serebrennikov",
@@ -128,27 +86,152 @@
       "repository": "https://github.com/Goodsmileduck/claude-registry",
       "license": "MIT",
       "keywords": [
-        "devops",
         "terraform",
         "opentofu",
         "terragrunt",
+        "iac",
+        "state",
+        "drift",
+        "provider-upgrade",
+        "hcl",
+        "s3",
+        "object-storage"
+      ],
+      "category": "devops"
+    },
+    {
+      "name": "kubernetes-skills",
+      "source": {
+        "source": "github",
+        "repo": "Goodsmileduck/claude-registry"
+      },
+      "skills": [
+        "./plugins/kubernetes-skills/skills/kubernetes-operations",
+        "./plugins/kubernetes-skills/skills/kubernetes-operators",
+        "./plugins/kubernetes-skills/skills/argocd-operations",
+        "./plugins/kubernetes-skills/skills/docker-workflows"
+      ],
+      "description": "Kubernetes operations and GitOps: pod/workload debugging; Operators (CRD design, reconcile-loop linting, OperatorHub capability audit); ArgoCD ApplicationSets and GitOps posture; and Docker/Dockerfile static analysis with Compose validation. Ships stdlib validators.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Stanislav Serebrennikov",
+        "url": "https://github.com/Goodsmileduck"
+      },
+      "homepage": "https://github.com/Goodsmileduck/claude-registry",
+      "repository": "https://github.com/Goodsmileduck/claude-registry",
+      "license": "MIT",
+      "keywords": [
         "kubernetes",
-        "docker",
+        "k8s",
+        "kubectl",
+        "operators",
+        "crd",
+        "kubebuilder",
         "argocd",
         "gitops",
-        "gcp",
-        "aws",
-        "cloudflare",
-        "github-actions",
-        "cf-cli",
-        "wrangler",
-        "iac",
+        "docker",
+        "dockerfile",
+        "compose"
+      ],
+      "category": "devops"
+    },
+    {
+      "name": "cicd-skills",
+      "source": {
+        "source": "github",
+        "repo": "Goodsmileduck/claude-registry"
+      },
+      "skills": [
+        "./plugins/cicd-skills/skills/github-actions-pipelines",
+        "./plugins/cicd-skills/skills/aws-codepipeline-codebuild"
+      ],
+      "description": "CI/CD pipelines: GitHub Actions (OIDC federation, permissions hardening, deploy concurrency, reusable workflows, pull_request_target security) and AWS CodePipeline + CodeBuild (pipeline v1/v2, CodeStar Connections, buildspec authoring, IAM service roles, ECR/VPC builds, caching).",
+      "version": "0.1.0",
+      "author": {
+        "name": "Stanislav Serebrennikov",
+        "url": "https://github.com/Goodsmileduck"
+      },
+      "homepage": "https://github.com/Goodsmileduck/claude-registry",
+      "repository": "https://github.com/Goodsmileduck/claude-registry",
+      "license": "MIT",
+      "keywords": [
         "ci-cd",
+        "github-actions",
         "oidc",
+        "reusable-workflows",
+        "codepipeline",
+        "codebuild",
+        "buildspec",
+        "aws",
+        "deploy"
+      ],
+      "category": "devops"
+    },
+    {
+      "name": "cloud-platform-skills",
+      "source": {
+        "source": "github",
+        "repo": "Goodsmileduck/claude-registry"
+      },
+      "skills": [
+        "./plugins/cloud-platform-skills/skills/gcp-iam",
+        "./plugins/cloud-platform-skills/skills/aws-cost-investigation",
+        "./plugins/cloud-platform-skills/skills/cloudflare-access-mcp",
+        "./plugins/cloud-platform-skills/skills/cloudflare-cf-cli",
+        "./plugins/cloud-platform-skills/skills/cloudflare-dns-zones",
+        "./plugins/cloud-platform-skills/skills/cloudflare-workers"
+      ],
+      "description": "Cloud provider operations: GCP IAM inheritance and impersonation; AWS cost investigation (Cost Explorer + CUR, anomaly detection, Savings Plans vs RIs); and Cloudflare platform — DNS zones (REST), Workers configuration, the cf unified CLI (preview), and Zero Trust Access for remote MCP servers. Ships stdlib validators.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Stanislav Serebrennikov",
+        "url": "https://github.com/Goodsmileduck"
+      },
+      "homepage": "https://github.com/Goodsmileduck/claude-registry",
+      "repository": "https://github.com/Goodsmileduck/claude-registry",
+      "license": "MIT",
+      "keywords": [
+        "gcp",
+        "iam",
+        "aws",
+        "cost",
         "finops",
+        "cloudflare",
+        "dns",
+        "workers",
+        "wrangler",
+        "cf-cli",
+        "access",
+        "zero-trust",
+        "mcp"
+      ],
+      "category": "devops"
+    },
+    {
+      "name": "diagramming-skills",
+      "source": {
+        "source": "github",
+        "repo": "Goodsmileduck/claude-registry"
+      },
+      "skills": [
+        "./plugins/diagramming-skills/skills/drawio-diagramming"
+      ],
+      "description": "draw.io diagram authoring: native .drawio file generation, the draw.io MCP servers, and an architecture/HLA method for infrastructure & Kubernetes topology (semantic edge routing, comb-bus/ladder/rail layouts, icon and color conventions). Ships a reusable Python generator.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Stanislav Serebrennikov",
+        "url": "https://github.com/Goodsmileduck"
+      },
+      "homepage": "https://github.com/Goodsmileduck/claude-registry",
+      "repository": "https://github.com/Goodsmileduck/claude-registry",
+      "license": "MIT",
+      "keywords": [
         "drawio",
         "diagrams",
-        "architecture-diagrams"
+        "architecture-diagrams",
+        "hla",
+        "infrastructure-diagrams",
+        "mermaid"
       ],
       "category": "devops"
     },
@@ -160,10 +243,11 @@
       },
       "skills": [
         "./plugins/digitalocean-skills/skills/digitalocean-app-platform",
-        "./plugins/digitalocean-skills/skills/digitalocean-dns-zones"
+        "./plugins/digitalocean-skills/skills/digitalocean-dns-zones",
+        "./plugins/digitalocean-skills/skills/digitalocean-registry-cleanup"
       ],
-      "description": "DigitalOcean operations skills. DNS zones: domain/record CRUD via doctl and the DigitalOcean Terraform provider, apex CNAME / no-flattening trap when migrating from Cloudflare, FQDN trailing-dot semantics, DNS-01 ACME wildcard certs, nameserver delegation. App Platform: lints app specs (app.yaml / doctl apps spec JSON / digitalocean_app Terraform) for plaintext secrets, missing health checks, single-instance services, dev databases in production, port mismatches, overlapping ingress routes, conflicting git/image sources, deprecated routes, unknown instance sizes, and app/database region mismatch.",
-      "version": "0.2.0",
+      "description": "DigitalOcean operations skills. DNS zones: domain/record CRUD via doctl and the DigitalOcean Terraform provider, apex CNAME / no-flattening trap when migrating from Cloudflare, FQDN trailing-dot semantics, DNS-01 ACME wildcard certs, nameserver delegation. App Platform: lints app specs (app.yaml / doctl apps spec JSON / digitalocean_app Terraform) for plaintext secrets, missing health checks, single-instance services, dev databases in production, port mismatches, overlapping ingress routes, conflicting git/image sources, deprecated routes, unknown instance sizes, and app/database region mismatch. Container Registry: analyze and clean registry images — list repos with tag counts, delete old tags (keep last N), find stale repos, trigger garbage collection, with dry-run support.",
+      "version": "0.3.0",
       "author": {
         "name": "Stanislav Serebrennikov",
         "url": "https://github.com/Goodsmileduck"
@@ -189,7 +273,10 @@
         "digitalocean_app",
         "app-yaml",
         "doctl-apps",
-        "app-platform-lint"
+        "app-platform-lint",
+        "container-registry",
+        "registry-cleanup",
+        "docker"
       ],
       "category": "devops"
     },

@@ -12,7 +12,7 @@ For Kubernetes manifests and pod debugging, see the `kubernetes-operations` skil
 Open with the static analyzers — they're stdlib Python, fast, deterministic:
 
 ```bash
-SKILL=plugins/devops-skills/skills/docker-workflows
+SKILL=plugins/kubernetes-skills/skills/docker-workflows
 python3 "$SKILL/scripts/dockerfile_analyzer.py" Dockerfile
 python3 "$SKILL/scripts/compose_validator.py" docker-compose.yml
 ```
@@ -152,5 +152,5 @@ Flag these without being asked:
 ## What this skill does NOT cover
 
 - Container runtime internals (cgroups, namespaces, seccomp profiles beyond defaults). Image scanning beyond Dockerfile static checks — use Trivy/Grype.
-- Registry workflows (push/pull/signing). See `do-registry-cleanup` for DigitalOcean registry hygiene.
+- Registry workflows (push/pull/signing). See `digitalocean-registry-cleanup` (in the `digitalocean-skills` plugin) for DigitalOcean registry hygiene.
 - Kubernetes-specific manifest concerns. See `kubernetes-operations`.

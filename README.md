@@ -19,8 +19,7 @@ Discover, install, and share plugins that enhance your Claude Code experience. F
 - [Quick Start](#quick-start)
 - [Available Plugins](#available-plugins)
   - [claude-md-optimizer](#claude-md-optimizer)
-  - [devops-skills](#devops-skills)
-  - [do-registry-cleanup](#do-registry-cleanup)
+  - [DevOps skill plugins](#devops-skill-plugins) (iac, kubernetes, cicd, cloud-platform, diagramming)
   - [digitalocean-skills](#digitalocean-skills)
   - [setup-project-skills](#setup-project-skills)
   - [mindfulness-mentor](#mindfulness-mentor)
@@ -81,51 +80,59 @@ Analyzes and optimizes CLAUDE.md files following Anthropic's official best pract
 
 ---
 
-### devops-skills
+### DevOps skill plugins
 
-Multi-cloud DevOps workflows across 15 skills covering infrastructure-as-code, Kubernetes, containers, GitOps, cloud IAM, CI/CD, and cost. Several skills ship stdlib Python validators (no dependencies).
+The DevOps skills are split into five focused plugins. Many ship stdlib Python validators (no dependencies). Install only what a project needs.
 
-| Domain | Skills |
-|--------|--------|
-| **IaC** | `terraform-workflows` (plan review, drift, state surgery), `terragrunt-workflows` (CLI redesign, stacks, `run --all`) |
-| **Kubernetes** | `kubernetes-operations` (pod debugging), `kubernetes-operators` (CRD design, reconcile-loop linting, OperatorHub audit) |
-| **Containers / GitOps** | `docker-workflows` (Dockerfile static analysis, compose validation), `argocd-operations` (ApplicationSets, GitOps posture) |
-| **Cloud** | `gcp-iam` (inheritance, impersonation), `cloud-storage-identification` (S3-compatible provider ID), `cloudflare-dns-zones`, `cloudflare-workers`, `cloudflare-cf-cli`, `cloudflare-access-mcp` |
-| **CI/CD & cost** | `github-actions-pipelines` (OIDC, hardening, reusable workflows), `aws-codepipeline-codebuild`, `aws-cost-investigation` (Cost Explorer + CUR) |
+**`iac-skills`** — Infrastructure-as-code.
 
-**Install:**
+| Skill | Covers |
+|-------|--------|
+| `terraform-workflows` | Plan review, drift, state surgery (mv/rm/import), provider upgrades |
+| `terragrunt-workflows` | CLI-redesign migration, config composition, `run --all`, stacks |
+| `cloud-storage-identification` | Identify S3-compatible object-storage providers |
+
+**`kubernetes-skills`** — Kubernetes operations & GitOps.
+
+| Skill | Covers |
+|-------|--------|
+| `kubernetes-operations` | Pod/workload debugging |
+| `kubernetes-operators` | CRD design, reconcile-loop linting, OperatorHub audit |
+| `argocd-operations` | ApplicationSets, GitOps posture |
+| `docker-workflows` | Dockerfile static analysis, Compose validation |
+
+**`cicd-skills`** — CI/CD pipelines.
+
+| Skill | Covers |
+|-------|--------|
+| `github-actions-pipelines` | OIDC, permissions hardening, reusable workflows, `pull_request_target` security |
+| `aws-codepipeline-codebuild` | Pipeline v1/v2, CodeStar Connections, buildspec, IAM roles, ECR/VPC builds |
+
+**`cloud-platform-skills`** — Cloud provider operations.
+
+| Skill | Covers |
+|-------|--------|
+| `gcp-iam` | Inheritance, impersonation |
+| `aws-cost-investigation` | Cost Explorer + CUR, anomaly detection, Savings Plans vs RIs |
+| `cloudflare-dns-zones` | DNS records via REST |
+| `cloudflare-workers` | Workers/wrangler configuration, bindings |
+| `cloudflare-cf-cli` | The `cf` unified CLI (preview) |
+| `cloudflare-access-mcp` | Zero Trust Access for remote MCP servers |
+
+**`diagramming-skills`** — `drawio-diagramming`: native `.drawio` generation, draw.io MCP servers, and an architecture/HLA method for infra & Kubernetes topology.
+
+**Install (example):**
 ```bash
-/plugin install devops-skills@claude-registry
+/plugin install kubernetes-skills@claude-registry
 ```
 
-**Triggers:** "terraform plan", "terragrunt", "kubectl", "CRD / operator", "Dockerfile", "ArgoCD", "GCP IAM", "GitHub Actions OIDC", "CodePipeline", "AWS cost", "Cloudflare DNS / Workers"
-
----
-
-### do-registry-cleanup
-
-Analyze and clean DigitalOcean Container Registry images. Requires `doctl` CLI.
-
-| Feature | Description |
-|---------|-------------|
-| **Analyze** | List all repos with tag counts, dates, and latest tags |
-| **Clean** | Delete old tags, keep newest N per repo |
-| **Dry Run** | Preview what would be deleted before executing |
-| **Stale** | Find repos not updated in N months |
-| **GC** | Trigger garbage collection to reclaim storage |
-
-**Install:**
-```bash
-/plugin install do-registry-cleanup@claude-registry
-```
-
-**Triggers:** "clean registry", "delete old images", "DO registry", "registry cleanup"
+**Triggers:** "terraform plan", "terragrunt", "kubectl", "CRD / operator", "Dockerfile", "ArgoCD", "GCP IAM", "GitHub Actions OIDC", "CodePipeline", "AWS cost", "Cloudflare DNS / Workers", "draw.io diagram"
 
 ---
 
 ### digitalocean-skills
 
-DigitalOcean operations skills. Two skills: `digitalocean-dns-zones` (DNS management) and `digitalocean-app-platform` (App Platform spec linter).
+DigitalOcean operations skills. Three skills: `digitalocean-dns-zones` (DNS management), `digitalocean-app-platform` (App Platform spec linter), and `digitalocean-registry-cleanup` (Container Registry hygiene).
 
 **`digitalocean-dns-zones`** — managing DNS via `doctl`, the DigitalOcean API v2, and the `digitalocean` Terraform provider.
 
@@ -146,12 +153,22 @@ DigitalOcean operations skills. Two skills: `digitalocean-dns-zones` (DNS manage
 | **Correctness checks** | Port mismatches, overlapping ingress routes, conflicting git/image sources, deprecated routes |
 | **Sizing checks** | Unknown instance size slugs, app/database region mismatch |
 
+**`digitalocean-registry-cleanup`** — analyze and clean DigitalOcean Container Registry images (requires `doctl`).
+
+| Feature | Description |
+|---------|-------------|
+| **Analyze** | List all repos with tag counts, dates, and latest tags |
+| **Clean** | Delete old tags, keep newest N per repo |
+| **Dry Run** | Preview what would be deleted before executing |
+| **Stale** | Find repos not updated in N months |
+| **GC** | Trigger garbage collection to reclaim storage |
+
 **Install:**
 ```bash
 /plugin install digitalocean-skills@claude-registry
 ```
 
-**Triggers:** "DigitalOcean DNS", "doctl domain records", "digitalocean_record", "apex CNAME on DO", "wildcard cert DigitalOcean", "DigitalOcean App Platform", "app.yaml", "doctl apps", "digitalocean_app", "app spec lint"
+**Triggers:** "DigitalOcean DNS", "doctl domain records", "digitalocean_record", "apex CNAME on DO", "wildcard cert DigitalOcean", "DigitalOcean App Platform", "app.yaml", "doctl apps", "digitalocean_app", "app spec lint", "clean registry", "delete old images", "registry cleanup"
 
 ---
 
@@ -244,15 +261,23 @@ claude-registry/
 ├── .claude-plugin/
 │   ├── plugin.json            # Root plugin manifest
 │   └── marketplace.json       # Marketplace definition (authoritative plugin list)
+├── .github/workflows/
+│   └── skills-ci.yml          # CI: best-practices lint + script security audit on every PR
+├── scripts/
+│   ├── lint_skills.py         # Stdlib best-practices linter (frontmatter, naming, manifests)
+│   └── audit_skill_scripts.py # Stdlib AST audit for code-execution risks in skill scripts
 └── plugins/
-    ├── claude-md-optimizer/   # CLAUDE.md auditing & optimization
-    ├── devops-skills/         # 15 multi-cloud DevOps skills (IaC, k8s, CI/CD, cost)
-    ├── digitalocean-skills/   # DigitalOcean DNS zones + App Platform linter
-    ├── do-registry-cleanup/   # DO Container Registry cleanup
-    ├── setup-project-skills/  # Install curated skills into a project
-    ├── mindfulness-mentor/    # Developer mindfulness exercises
-    ├── cloudflare/            # Curated upstream: Cloudflare platform skills
-    └── vercel-react-skills/   # Curated upstream: Vercel React/Next.js skills
+    ├── claude-md-optimizer/     # CLAUDE.md auditing & optimization
+    ├── iac-skills/              # Terraform, Terragrunt, storage identification
+    ├── kubernetes-skills/       # k8s ops, operators, ArgoCD, Docker
+    ├── cicd-skills/             # GitHub Actions, AWS CodePipeline/CodeBuild
+    ├── cloud-platform-skills/   # GCP IAM, AWS cost, Cloudflare platform
+    ├── diagramming-skills/      # draw.io architecture diagrams
+    ├── digitalocean-skills/     # DigitalOcean DNS, App Platform linter, registry cleanup
+    ├── setup-project-skills/    # Install curated skills into a project
+    ├── mindfulness-mentor/      # Developer mindfulness exercises
+    ├── cloudflare/              # Curated upstream: Cloudflare platform skills
+    └── vercel-react-skills/     # Curated upstream: Vercel React/Next.js skills
 
 # Each plugins/<name>/ contains:
 #   .claude-plugin/plugin.json   — plugin manifest
@@ -270,6 +295,13 @@ Contributions are welcome! If you have a plugin idea or want to share your workf
 3. Add proper `.claude-plugin/plugin.json` manifest
 4. Add entry to `.claude-plugin/marketplace.json`
 5. Submit a Pull Request
+
+Every PR runs `skills-ci`, which lints skills against the [authoring rules](CLAUDE.md) (frontmatter, naming, manifest consistency) and audits skill scripts for code-execution risks. Run the checks locally first:
+
+```bash
+python3 scripts/lint_skills.py          # best-practices lint
+python3 scripts/audit_skill_scripts.py  # script security audit
+```
 
 ### Plugin Requirements
 

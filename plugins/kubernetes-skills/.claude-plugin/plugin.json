@@ -1,0 +1,25 @@
+{
+  "name": "kubernetes-skills",
+  "version": "0.1.0",
+  "description": "Kubernetes operations and GitOps: pod/workload debugging; Operators (CRD design, reconcile-loop linting, OperatorHub capability audit); ArgoCD ApplicationSets and GitOps posture; and Docker/Dockerfile static analysis with Compose validation. Ships stdlib validators.",
+  "author": {
+    "name": "Stanislav Serebrennikov",
+    "url": "https://github.com/Goodsmileduck"
+  },
+  "homepage": "https://github.com/Goodsmileduck/claude-registry",
+  "repository": "https://github.com/Goodsmileduck/claude-registry",
+  "license": "MIT",
+  "keywords": [
+    "kubernetes",
+    "k8s",
+    "kubectl",
+    "operators",
+    "crd",
+    "kubebuilder",
+    "argocd",
+    "gitops",
+    "docker",
+    "dockerfile",
+    "compose"
+  ]
+}
