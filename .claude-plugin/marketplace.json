@@ -12,6 +12,9 @@
         "source": "github",
         "repo": "Goodsmileduck/claude-registry"
       },
+      "skills": [
+        "./plugins/claude-md-optimizer/skills/claude-md-optimizer"
+      ],
       "description": "Analyzes and optimizes CLAUDE.md files following Anthropic's official best practices. Use when reviewing existing CLAUDE.md for improvements, or when user mentions CLAUDE.md is too long or ineffective.",
       "version": "1.0.0",
       "author": {
@@ -38,6 +41,9 @@
         "source": "github",
         "repo": "Goodsmileduck/claude-registry"
       },
+      "skills": [
+        "./plugins/mindfulness-mentor/skills/mindfulness-mentor"
+      ],
       "description": "Guides developers through mindfulness exercises and stress-reduction techniques. Use when taking a break, feeling overwhelmed, debugging frustration, or needing to refocus during a coding session.",
       "version": "1.0.0",
       "author": {
@@ -65,6 +71,9 @@
         "source": "github",
         "repo": "Goodsmileduck/claude-registry"
       },
+      "skills": [
+        "./plugins/do-registry-cleanup/skills/do-registry-cleanup"
+      ],
       "description": "Analyze and clean DigitalOcean Container Registry images. Lists repos with tag counts, deletes old tags (keep last N), finds stale repos, triggers garbage collection. Supports dry-run mode.",
       "version": "1.0.0",
       "author": {
@@ -91,7 +100,25 @@
         "source": "github",
         "repo": "Goodsmileduck/claude-registry"
       },
-      "description": "Multi-cloud DevOps workflows across 13 skills: Terraform/OpenTofu plan review and state surgery, Terragrunt CLI redesign and stacks, Kubernetes day-to-day operations, Kubernetes Operators (CRD/reconcile/OperatorHub), Docker workflows, ArgoCD ApplicationSets and GitOps posture, GCP IAM inheritance and impersonation, S3-compatible storage identification, GitHub Actions OIDC and reusable workflows, Cloudflare DNS zones (REST), Cloudflare `cf` unified CLI (preview), AWS CodePipeline + CodeBuild, AWS cost investigation (Cost Explorer + CUR). Covers AWS, GCP, DigitalOcean, Azure, Cloudflare.",
+      "skills": [
+        "./plugins/devops-skills/skills/argocd-operations",
+        "./plugins/devops-skills/skills/aws-codepipeline-codebuild",
+        "./plugins/devops-skills/skills/aws-cost-investigation",
+        "./plugins/devops-skills/skills/cloud-storage-identification",
+        "./plugins/devops-skills/skills/cloudflare-access-mcp",
+        "./plugins/devops-skills/skills/cloudflare-cf-cli",
+        "./plugins/devops-skills/skills/cloudflare-dns-zones",
+        "./plugins/devops-skills/skills/cloudflare-workers",
+        "./plugins/devops-skills/skills/docker-workflows",
+        "./plugins/devops-skills/skills/drawio",
+        "./plugins/devops-skills/skills/gcp-iam",
+        "./plugins/devops-skills/skills/github-actions-pipelines",
+        "./plugins/devops-skills/skills/kubernetes-operations",
+        "./plugins/devops-skills/skills/kubernetes-operators",
+        "./plugins/devops-skills/skills/terraform-workflows",
+        "./plugins/devops-skills/skills/terragrunt-workflows"
+      ],
+      "description": "Multi-cloud DevOps workflows across 15 skills: Terraform/OpenTofu plan review and state surgery, Terragrunt CLI redesign and stacks, Kubernetes day-to-day operations, Kubernetes Operators (CRD/reconcile/OperatorHub), Docker workflows, ArgoCD ApplicationSets and GitOps posture, GCP IAM inheritance and impersonation, S3-compatible storage identification, GitHub Actions OIDC and reusable workflows, Cloudflare DNS zones (REST), Cloudflare Zero Trust Access for remote MCP servers, Cloudflare Workers, Cloudflare `cf` unified CLI (preview), AWS CodePipeline + CodeBuild, AWS cost investigation (Cost Explorer + CUR). Covers AWS, GCP, DigitalOcean, Azure, Cloudflare.",
       "version": "0.1.0",
       "author": {
         "name": "Stanislav Serebrennikov",
@@ -118,7 +145,10 @@
         "iac",
         "ci-cd",
         "oidc",
-        "finops"
+        "finops",
+        "drawio",
+        "diagrams",
+        "architecture-diagrams"
       ],
       "category": "devops"
     },
@@ -128,6 +158,10 @@
         "source": "github",
         "repo": "Goodsmileduck/claude-registry"
       },
+      "skills": [
+        "./plugins/digitalocean-skills/skills/digitalocean-app-platform",
+        "./plugins/digitalocean-skills/skills/digitalocean-dns-zones"
+      ],
       "description": "DigitalOcean operations skills. DNS zones: domain/record CRUD via doctl and the DigitalOcean Terraform provider, apex CNAME / no-flattening trap when migrating from Cloudflare, FQDN trailing-dot semantics, DNS-01 ACME wildcard certs, nameserver delegation. App Platform: lints app specs (app.yaml / doctl apps spec JSON / digitalocean_app Terraform) for plaintext secrets, missing health checks, single-instance services, dev databases in production, port mismatches, overlapping ingress routes, conflicting git/image sources, deprecated routes, unknown instance sizes, and app/database region mismatch.",
       "version": "0.2.0",
       "author": {
@@ -165,6 +199,9 @@
         "source": "github",
         "repo": "Goodsmileduck/claude-registry"
       },
+      "skills": [
+        "./plugins/setup-project-skills/skills/setup-project-skills"
+      ],
       "description": "Installs skills from a user-curated manifest (~/.claude/skill-manifest.json) into the current project's .claude/skills/ — symlinks local skills, runs `npx skills add` for third-party ones, and advises `/plugin install` for native Claude plugins. Optionally scans the project for trigger files and pre-selects recommended matches. Ships a starter manifest as skill-manifest.example.json.",
       "version": "0.1.0",
       "author": {
