@@ -309,6 +309,37 @@
       "category": "productivity"
     },
     {
+      "name": "hermes-tweet",
+      "source": {
+        "source": "github",
+        "repo": "Goodsmileduck/claude-registry"
+      },
+      "skills": [
+        "./plugins/hermes-tweet/skills/hermes-tweet"
+      ],
+      "description": "Hermes Agent X/Twitter automation through Xquik: endpoint discovery, public reads, account reads, monitors, media workflows, and approval-gated posting actions.",
+      "version": "0.1.6",
+      "author": {
+        "name": "Xquik",
+        "url": "https://github.com/Xquik-dev"
+      },
+      "homepage": "https://github.com/Xquik-dev/hermes-tweet",
+      "repository": "https://github.com/Xquik-dev/hermes-tweet",
+      "license": "MIT",
+      "keywords": [
+        "hermes-agent",
+        "hermes",
+        "xquik",
+        "twitter",
+        "x",
+        "social-media",
+        "automation",
+        "monitoring",
+        "tweet"
+      ],
+      "category": "productivity"
+    },
+    {
       "name": "cloudflare",
       "source": {
         "source": "github",

@@ -22,6 +22,7 @@ Discover, install, and share plugins that enhance your Claude Code experience. F
   - [DevOps skill plugins](#devops-skill-plugins) (iac, kubernetes, cicd, cloud-platform, diagramming)
   - [digitalocean-skills](#digitalocean-skills)
   - [setup-project-skills](#setup-project-skills)
+  - [hermes-tweet](#hermes-tweet)
   - [mindfulness-mentor](#mindfulness-mentor)
   - [cloudflare](#cloudflare)
   - [vercel-react-skills](#vercel-react-skills)
@@ -185,6 +186,19 @@ Installs skills from a user-curated manifest (`~/.claude/skill-manifest.json`) i
 
 ---
 
+### hermes-tweet
+
+Guides Hermes Agent sessions that use Hermes Tweet for X/Twitter search, public and private reads, monitoring, media workflows, and approval-gated posting through Xquik.
+
+**Install:**
+```bash
+/plugin install hermes-tweet@claude-registry
+```
+
+**Triggers:** "Hermes Tweet", "tweet search", "X/Twitter monitoring", "social listening", "approval-gated posting"
+
+---
+
 ### mindfulness-mentor
 
 Guides developers through mindfulness exercises and stress-reduction techniques.
@@ -275,6 +289,7 @@ claude-registry/
     ├── diagramming-skills/      # draw.io architecture diagrams
     ├── digitalocean-skills/     # DigitalOcean DNS, App Platform linter, registry cleanup
     ├── setup-project-skills/    # Install curated skills into a project
+    ├── hermes-tweet/            # Hermes Agent X/Twitter automation through Xquik
     ├── mindfulness-mentor/      # Developer mindfulness exercises
     ├── cloudflare/              # Curated upstream: Cloudflare platform skills
     └── vercel-react-skills/     # Curated upstream: Vercel React/Next.js skills
