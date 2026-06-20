@@ -33,6 +33,11 @@ def utc_now_iso():
     return datetime.datetime.now(datetime.timezone.utc).isoformat()
 
 
+def _is_assignment(token):
+    """True for a leading `VAR=value` env-assignment token (not a flag)."""
+    return "=" in token and not token.startswith("-")
+
+
 def parse_op_command(command):
     """Return {op_subcommand, refs, child} if `command` invokes op, else None.
 
@@ -47,7 +52,7 @@ def parse_op_command(command):
     if tokens[idx] == "env":
         idx += 1
         # skip `VAR=value` assignments that follow `env` (e.g. `env FOO=bar op ...`)
-        while idx < len(tokens) and "=" in tokens[idx] and not tokens[idx].startswith("-"):
+        while idx < len(tokens) and _is_assignment(tokens[idx]):
             idx += 1
     if idx >= len(tokens):
         return None
@@ -66,7 +71,7 @@ def child_leader(child):
     if not child:
         return None
     for tok in child.split():
-        if "=" in tok and not tok.startswith("-"):
+        if _is_assignment(tok):
             continue
         return os.path.basename(tok)
     return None
@@ -85,11 +90,11 @@ def assess_risk(parsed):
     return ("allow", "")
 
 
-def make_entry(parsed, ctx, decision):
+def make_entry(parsed, now, session_id, cwd, decision):
     return {
-        "ts": ctx["now"],
-        "session_id": ctx.get("session_id", ""),
-        "cwd": ctx.get("cwd", ""),
+        "ts": now,
+        "session_id": session_id,
+        "cwd": cwd,
         "op_subcommand": parsed["op_subcommand"],
         "refs": parsed["refs"],
         "child": parsed["child"],
@@ -101,7 +106,7 @@ def append_log(path, entry):
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
     line = json.dumps(entry, separators=(",", ":"), sort_keys=True)
-    fd = os.open(str(path), os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
     try:
         os.write(fd, (line + "\n").encode("utf-8"))
     finally:
@@ -123,9 +128,8 @@ def run_hook(stdin_text, now, log_path):
     if parsed is None:
         return None  # not an op call; stay silent -> normal permission flow
     decision, reason = assess_risk(parsed)
-    ctx = {"now": now, "session_id": event.get("session_id", ""),
-           "cwd": event.get("cwd", "")}
-    append_log(log_path, make_entry(parsed, ctx, decision))
+    append_log(log_path, make_entry(
+        parsed, now, event.get("session_id", ""), event.get("cwd", ""), decision))
     if decision == "deny":
         return {"hookSpecificOutput": {
             "hookEventName": "PreToolUse",
@@ -148,9 +152,8 @@ def verify_lines(lines):
         except ValueError:
             findings.append("line %d: not valid JSON" % i)
             continue
-        keys = set(entry.keys())
-        extra = keys - SCHEMA_KEYS
-        missing = SCHEMA_KEYS - keys
+        extra = entry.keys() - SCHEMA_KEYS
+        missing = SCHEMA_KEYS - entry.keys()
         if extra:
             findings.append("line %d: unexpected field(s) %s (log must hold only "
                             "refs + metadata)" % (i, sorted(extra)))
@@ -198,18 +201,25 @@ def cmd_verify(args):
 
 def build_parser():
     p = argparse.ArgumentParser(description="1Password op access audit for Claude Code.")
+    common = argparse.ArgumentParser(add_help=False)
+    common.add_argument("--log", help="Audit log path (default %s)." % DEFAULT_LOG)
     sub = p.add_subparsers(dest="cmd", required=True)
-    h = sub.add_parser("hook", help="PreToolUse hook: read event JSON on stdin, log, maybe deny.")
-    h.add_argument("--log", help="Audit log path (default %s)." % DEFAULT_LOG)
+    h = sub.add_parser("hook", parents=[common],
+                       help="PreToolUse hook: read event JSON on stdin, log, maybe deny.")
     h.set_defaults(func=cmd_hook)
-    v = sub.add_parser("verify", help="Check the audit log's schema/integrity.")
-    v.add_argument("--log", help="Audit log path (default %s)." % DEFAULT_LOG)
+    v = sub.add_parser("verify", parents=[common],
+                       help="Check the audit log's schema/integrity.")
     v.add_argument("--format", choices=["text", "json"], default="text")
     v.set_defaults(func=cmd_verify)
     return p
 
 
 def main(argv=None):
+    # Fast path: this runs as a PreToolUse hook on *every* Bash call, so an
+    # unarmed `hook` invocation must exit before argparse and the stdin read.
+    cli = sys.argv[1:] if argv is None else list(argv)
+    if cli[:1] == ["hook"] and os.environ.get("OP_AUDIT_ENABLED") != "1":
+        return 0
     args = build_parser().parse_args(argv)
     return args.func(args)
 
