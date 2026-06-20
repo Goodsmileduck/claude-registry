@@ -22,7 +22,7 @@ Three distinct surfaces record 1Password secret access. They differ in authority
 
 | Surface | Enforced vs advisory | Who controls it | Tamper-evident |
 |---|---|---|---|
-| 1Password server-side audit | Advisory (read-only from this plugin) | 1Password service | Yes — cryptographically signed by 1Password |
+| 1Password server-side audit | Authoritative (external enforcement) | 1Password service | Yes — cryptographically signed by 1Password |
 | `op_audit.py` PreToolUse hook | **Enforced** (can deny calls) | Plugin + user opt-in | No — local filesystem |
 | Local JSONL log (`op-access.jsonl`) | Advisory | Local filesystem | Optional (`chattr +a`) |
 
@@ -56,8 +56,8 @@ The `scripts/op_audit.py` hook runs as a Claude Code PreToolUse hook. It is **in
 1. Intercepts every `Bash` tool call before execution.
 2. Parses the command for an `op` invocation (recognizes `op` as the leading token, optionally behind `env`).
 3. Logs the call to the local JSONL log.
-4. Evaluates the risk of the wrapped child command (for `op run` and `op inject`).
-5. **Denies automatically** if the wrapped child is a shell, network tool, or interpreter — the specific set checked includes `sh`, `bash`, `zsh`, `dash`, `ksh`, `curl`, `wget`, `nc`, `ncat`, `netcat`, `socat`, `telnet`, `ssh`, `scp`, `sftp`, `python`, `python3`, `perl`, `ruby`, `node`, `deno`, and `php`.
+4. Evaluates the risk of the wrapped child command (for `op run` only; `op inject` writes a file rather than wrapping a child, so its protection is the disk-hygiene guidance, not a child-command deny).
+5. **Denies automatically** if the `op run` wrapped child is a shell, common network tool, or interpreter — see `scripts/op_audit.py` (`RISKY_CHILD_LEADERS`) for the exact set.
 6. Returns a deny decision to Claude Code, which aborts the call without executing it.
 
 For allowed calls (not matching the risky-child set), the hook logs the entry and returns silently — the always-ask permission rule then prompts interactively as normal. This means the hook provides a second deny layer, not a bypass of the always-ask rule described in `../SKILL.md`.
@@ -133,7 +133,7 @@ Each line in `~/.claude/logs/op-access.jsonl` is a JSON object with exactly thes
 | `cwd` | string | Working directory at the time of the `op` call |
 | `op_subcommand` | string | The `op` subcommand (e.g. `run`, `inject`, `read`, `item`) |
 | `refs` | array of strings | All `op://Vault/Item/field` references found in the command |
-| `child` | string or null | For `op run`/`op inject`, the leading token of the wrapped child command; otherwise null |
+| `child` | string or null | For `op run`, the wrapped child command string; otherwise null |
 | `decision` | string | `"allow"` or `"deny"` |
 
 Example entry:

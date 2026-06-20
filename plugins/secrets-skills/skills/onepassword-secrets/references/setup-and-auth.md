@@ -149,6 +149,8 @@ OP_SERVICE_ACCOUNT_TOKEN="$(op read op://Ops/DeployToken/credential)" \
   op run --env-file=.env.tpl --vault Production -- ./deploy.sh
 ```
 
+Note: the `op read` command substitution above resolves a value that may appear in shell history — apply the hygiene practices described in [Shell-history hygiene](#shell-history-hygiene) below.
+
 ---
 
 ## Always-ask permission rule and bypass surfaces

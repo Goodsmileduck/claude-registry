@@ -23,7 +23,7 @@ RISKY_CHILD_LEADERS = {
     "sh", "bash", "zsh", "dash", "ksh",
     "curl", "wget", "nc", "ncat", "netcat", "socat", "telnet",
     "ssh", "scp", "sftp",
-    "python", "python3", "perl", "ruby", "node", "deno", "php",
+    "python", "python3", "perl", "ruby", "node", "deno", "bun", "php",
 }
 DEFAULT_LOG = Path(os.path.expanduser("~/.claude/logs/op-access.jsonl"))
 SCHEMA_KEYS = {"ts", "session_id", "cwd", "op_subcommand", "refs", "child", "decision"}
@@ -43,7 +43,12 @@ def parse_op_command(command):
     tokens = command.strip().split()
     if not tokens:
         return None
-    idx = 1 if tokens[0] == "env" else 0
+    idx = 0
+    if tokens[idx] == "env":
+        idx += 1
+        # skip `VAR=value` assignments that follow `env` (e.g. `env FOO=bar op ...`)
+        while idx < len(tokens) and "=" in tokens[idx] and not tokens[idx].startswith("-"):
+            idx += 1
     if idx >= len(tokens):
         return None
     if os.path.basename(tokens[idx]) != "op":
@@ -69,14 +74,14 @@ def child_leader(child):
 
 def assess_risk(parsed):
     """Return (decision, reason). 'deny' for a risky wrapped child, else 'allow'."""
-    if parsed["op_subcommand"] in ("run", "inject"):
+    if parsed["op_subcommand"] == "run":
         leader = child_leader(parsed["child"])
         if leader in RISKY_CHILD_LEADERS:
             return ("deny",
-                    "op %s wraps '%s', which can exfiltrate the resolved secret in "
+                    "op run wraps '%s', which can exfiltrate the resolved secret in "
                     "one approved call. Review the full command line; rerun without "
                     "the shell/network child if unintended."
-                    % (parsed["op_subcommand"], leader))
+                    % leader)
     return ("allow", "")
 
 
