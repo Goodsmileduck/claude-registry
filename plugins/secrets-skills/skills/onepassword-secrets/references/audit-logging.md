@@ -139,7 +139,7 @@ Each line in `~/.claude/logs/op-access.jsonl` is a JSON object with exactly thes
 Example entry:
 
 ```json
-{"ts": "2025-06-20T10:14:32.001Z", "session_id": "abc123", "cwd": "/home/user/myapp", "op_subcommand": "run", "refs": ["op://Production/Postgres/connection-string"], "child": "python3", "decision": "deny"}
+{"ts": "2025-06-20T10:14:32.001Z", "session_id": "abc123", "cwd": "/home/user/myapp", "op_subcommand": "run", "refs": ["op://Production/Postgres/connection-string"], "child": "python3 exfil.py", "decision": "deny"}
 ```
 
 The schema is exact: `verify` flags any entry that contains additional fields beyond these seven or is missing any of them. No extra fields are permitted in the log — this prevents log injection from smuggling metadata that could be confused with hook-generated entries.
