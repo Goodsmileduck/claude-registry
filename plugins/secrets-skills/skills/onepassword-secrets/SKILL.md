@@ -54,12 +54,14 @@ These commands enumerate items and vaults without resolving field values; they a
 Use `op inject` only when a tool requires a physical config file and `op run` is not applicable. Disk hygiene is mandatory:
 
 ```shell
-# Write to tmpfs (Linux) to keep the file off persistent storage
-op inject -i config.yml.tpl -o /tmp/config.yml
-chmod 600 /tmp/config.yml
+# Preferred: write to tmpfs (Linux) — file never reaches persistent storage
+op inject -i config.yml.tpl -o /dev/shm/config.yml
+chmod 600 /dev/shm/config.yml
 # Clean up in a trap so the file is removed even on error
-trap 'rm -f /tmp/config.yml' EXIT
+trap 'rm -f /dev/shm/config.yml' EXIT
 ```
+
+If `/dev/shm` is unavailable, fall back to a named pipe (`mkfifo`) or, as a last resort, a regular tempfile under `/tmp` with the same `chmod 600` and `trap` hygiene. Do not write to `/tmp` when `/dev/shm` is available.
 
 Additional constraints:
 
@@ -80,7 +82,7 @@ Warn before running: the resolved value will appear in terminal output and may e
 
 ## Audit logging
 
-1Password's server-side audit log is the authoritative record of every secret access; it is tamper-evident, vault-scoped, and available in the 1Password admin console regardless of local state. The opt-in PreToolUse hook in this plugin provides a local deny-capable layer: arm it by setting `OP_AUDIT_ENABLED=1` before starting Claude Code. When armed, every `op` Bash invocation is logged to `~/.claude/logs/op-access.jsonl` and high-risk wrapped children (shells, network tools, interpreters) are denied automatically. The local log is non-authoritative and complements, not replaces, the 1Password server-side record. For log format, field schema, and retention guidance, see `references/audit-logging.md`.
+1Password's server-side audit log is the authoritative record of every secret access; it is vault-scoped and available in the 1Password admin console regardless of local state. The opt-in PreToolUse hook in this plugin provides a local deny-capable layer: arm it by setting `OP_AUDIT_ENABLED=1` before starting Claude Code. When armed, every `op` Bash invocation is logged to `~/.claude/logs/op-access.jsonl` and high-risk wrapped children (shells, network tools, interpreters) are denied automatically. The local log is non-authoritative and complements, not replaces, the 1Password server-side record. For log format, field schema, and retention guidance, see `references/audit-logging.md`.
 
 ## Verify the log
 
@@ -101,7 +103,7 @@ python3 <plugin>/skills/onepassword-secrets/scripts/op_audit.py verify --format 
 | `[ERROR] 401 Unauthorized` / `not signed in` | Run `op signin` (interactive) or set `OP_SERVICE_ACCOUNT_TOKEN` (headless). |
 | `[ERROR] 403 Forbidden` on a vault | The authenticated account lacks access to that vault; check vault permissions in the 1Password admin console. |
 | `[ERROR] item not found` | Verify vault name and item name with `op item list --vault <Vault>`; names are case-sensitive. |
-| `[ERROR] field not found` | Confirm the full reference path with `op item get <Item> --vault <Vault> --format json` (inspect the `reference` key, not the `value` key). |
+| `[ERROR] field not found` | Confirm the full reference path with `op item get <Item> --vault <Vault> --format json` (diagnostic use only — resolves values into output; inspect the `reference` field, never restate the `value` field). |
 
 ## Proactive triggers
 
