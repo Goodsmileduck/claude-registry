@@ -236,6 +236,19 @@
       "category": "devops"
     },
     {
+      "name": "secrets-skills",
+      "source": { "source": "github", "repo": "Goodsmileduck/claude-registry" },
+      "skills": ["./plugins/secrets-skills/skills/onepassword-secrets"],
+      "description": "Inject and audit 1Password secrets via the op CLI: op:// references with op run/op inject, an always-ask permission gate, and an opt-in deny-capable PreToolUse audit hook. Use for API keys, tokens, credentials, .env secrets, OP_SERVICE_ACCOUNT_TOKEN, or 1Password.",
+      "version": "0.1.0",
+      "author": { "name": "Stanislav Serebrennikov", "url": "https://github.com/Goodsmileduck" },
+      "homepage": "https://github.com/Goodsmileduck/claude-registry",
+      "repository": "https://github.com/Goodsmileduck/claude-registry",
+      "license": "MIT",
+      "keywords": ["1password", "op-cli", "secrets", "secret-injection", "op-run", "service-account", "audit-log", "pretooluse-hook", "credentials", "env"],
+      "category": "security"
+    },
+    {
       "name": "digitalocean-skills",
       "source": {
         "source": "github",

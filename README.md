@@ -21,6 +21,7 @@ Discover, install, and share plugins that enhance your Claude Code experience. F
   - [claude-md-optimizer](#claude-md-optimizer)
   - [DevOps skill plugins](#devops-skill-plugins) (iac, kubernetes, cicd, cloud-platform, diagramming)
   - [digitalocean-skills](#digitalocean-skills)
+  - [secrets-skills](#secrets-skills)
   - [setup-project-skills](#setup-project-skills)
   - [mindfulness-mentor](#mindfulness-mentor)
   - [cloudflare](#cloudflare)
@@ -172,6 +173,26 @@ DigitalOcean operations skills. Three skills: `digitalocean-dns-zones` (DNS mana
 
 ---
 
+### secrets-skills
+
+Injects and audits 1Password secrets via the `op` CLI. One skill: `onepassword-secrets`.
+
+| Feature | Description |
+|---------|-------------|
+| **Injection** | `op run` / `op inject` for `op://` references in env vars and config files |
+| **Permission gate** | Always-ask gate before any secret-touching command |
+| **Audit hook** | Opt-in `PreToolUse` hook (`hooks/hooks.json`) that can deny commands touching secrets |
+| **Service account** | `OP_SERVICE_ACCOUNT_TOKEN` usage for CI/non-interactive flows |
+
+**Install:**
+```bash
+/plugin install secrets-skills@claude-registry
+```
+
+**Triggers:** "1Password", "op://", "op run", "op inject", "OP_SERVICE_ACCOUNT_TOKEN", "API keys", "credentials", ".env secrets"
+
+---
+
 ### setup-project-skills
 
 Installs skills from a user-curated manifest (`~/.claude/skill-manifest.json`) into a project's `.claude/skills/` — symlinks local skills, runs `npx skills add` for third-party ones, and advises `/plugin install` for native Claude plugins. Can scan the project for trigger files (Dockerfile, `wrangler.jsonc`, `*.tf`, …) and pre-select recommended matches. Ships a starter `skill-manifest.example.json`.
@@ -274,6 +295,7 @@ claude-registry/
     ├── cloud-platform-skills/   # GCP IAM, AWS cost, Cloudflare platform
     ├── diagramming-skills/      # draw.io architecture diagrams
     ├── digitalocean-skills/     # DigitalOcean DNS, App Platform linter, registry cleanup
+    ├── secrets-skills/          # 1Password secret injection and audit hook
     ├── setup-project-skills/    # Install curated skills into a project
     ├── mindfulness-mentor/      # Developer mindfulness exercises
     ├── cloudflare/              # Curated upstream: Cloudflare platform skills

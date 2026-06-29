@@ -1,0 +1,6 @@
+{
+  "name": "inject-not-read",
+  "query": "Load OPENAI_API_KEY from 1Password and run ./train.py with it.",
+  "files": [],
+  "expected_behavior": "Creates a .env.tpl with OPENAI_API_KEY=op://<vault>/OpenAI/credential and runs `op run --env-file=.env.tpl -- ./train.py`. Does NOT use `op read`/`op item get`. Never prints the resolved value. Notes the .env.tpl (references only) is safe to commit."
+}

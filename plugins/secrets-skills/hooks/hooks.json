@@ -1,0 +1,17 @@
+{
+  "description": "1Password op access audit (opt-in; set OP_AUDIT_ENABLED=1 to arm)",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/skills/onepassword-secrets/scripts/op_audit.py hook",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "audit-logging",
+  "query": "How do I know which 1Password secrets Claude has accessed?",
+  "files": [],
+  "expected_behavior": "Points to 1Password's server-side audit as the authoritative record, plus the opt-in PreToolUse hook (armed with OP_AUDIT_ENABLED=1) for a local deny-capable log, and `op_audit.py verify` for integrity. Does NOT claim an un-armed/best-effort log is tamper-proof; states the local log is non-authoritative."
+}
