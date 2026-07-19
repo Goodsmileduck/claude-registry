@@ -1,6 +1,6 @@
 ---
 name: cloudflare-dns-zones
-description: Operates Cloudflare DNS zones and records via the REST API (curl + jq) — token scoping, zone discovery, record CRUD, batch operations, BIND import/export, proxied vs DNS-only decisions, CNAME flattening at apex, DNSSEC, and DNS-01 ACME challenge wiring with cert-manager. Use when working with Cloudflare DNS, `api.cloudflare.com`, `CF_API_TOKEN`, zone records, DNS-01 challenges, mail records (MX/SPF/DKIM/DMARC), or "orange cloud / grey cloud" proxy decisions.
+description: Operates Cloudflare DNS zones and records via the REST API (curl + jq) — token scoping, zone discovery, record CRUD, batch operations, BIND import/export, proxied vs DNS-only decisions, CNAME flattening at apex, DNSSEC, and DNS-01 ACME challenge wiring with cert-manager. Use when working with Cloudflare DNS, `api.cloudflare.com`, `CLOUDFLARE_API_TOKEN` (or legacy `CF_API_TOKEN`), zone records, DNS-01 challenges, mail records (MX/SPF/DKIM/DMARC), or "orange cloud / grey cloud" proxy decisions.
 ---
 
 # Cloudflare DNS Zones
@@ -21,7 +21,7 @@ Operational skill for managing Cloudflare DNS through the REST API. Not for Terr
 
 ## Cross-cutting rules
 
-1. **Never use the Global API Key.** It's account-wide and can't be scoped. Use API Tokens (Profile → API Tokens). Every example below uses `Authorization: Bearer $CF_API_TOKEN`.
+1. **Never use the Global API Key.** It's account-wide and can't be scoped. Use API Tokens (Profile → API Tokens). Every example below uses `Authorization: Bearer $CLOUDFLARE_API_TOKEN` — the same variable wrangler, the `cf` CLI, and the official SDK read, so one export serves every Cloudflare tool.
 2. **Scope tokens to the minimum.** A token for DNS work needs `Zone:Read` + `Zone:DNS:Edit` on the specific zones it operates. Not "All Zones" unless the workload genuinely touches all zones.
 3. **Discover zone IDs at runtime.** Hard-coding zone IDs in scripts is brittle — they change when zones are recreated. Look them up by name on each run.
 4. **Idempotent operations require list-then-act.** There is no "upsert by name+type" endpoint. Always `GET` filtered by `name` and `type` first, then `POST` (create) or `PATCH` (update by ID).
@@ -31,7 +31,7 @@ Operational skill for managing Cloudflare DNS through the REST API. Not for Terr
 
 **Base URL:** `https://api.cloudflare.com/client/v4`
 
-**Auth header:** `Authorization: Bearer $CF_API_TOKEN`
+**Auth header:** `Authorization: Bearer $CLOUDFLARE_API_TOKEN`
 
 **Response envelope:** every endpoint returns:
 
@@ -50,7 +50,7 @@ Always check `.success` and extract from `.result`. Don't assume the top-level i
 
 ```bash
 # Verify token works and see what it can do
-curl -sf -H "Authorization: Bearer $CF_API_TOKEN" \
+curl -sf -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
   https://api.cloudflare.com/client/v4/user/tokens/verify | jq .result.status
 # Expected: "active"
 ```
@@ -76,12 +76,12 @@ API tokens are created at the user level (Profile → API Tokens → Create Toke
 
 ```bash
 # By exact name
-ZONE_ID=$(curl -sf -H "Authorization: Bearer $CF_API_TOKEN" \
+ZONE_ID=$(curl -sf -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
   "https://api.cloudflare.com/client/v4/zones?name=example.com" \
   | jq -r '.result[0].id')
 
 # All zones (paginated; default 20 per page, max 50)
-curl -sf -H "Authorization: Bearer $CF_API_TOKEN" \
+curl -sf -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
   "https://api.cloudflare.com/client/v4/zones?per_page=50&page=1" \
   | jq -r '.result[] | "\(.id)\t\(.name)\t\(.status)"'
 ```
@@ -108,7 +108,7 @@ All record operations are under `/zones/{zone_id}/dns_records`. The full method 
 
 ```bash
 curl -sf -X POST \
-  -H "Authorization: Bearer $CF_API_TOKEN" \
+  -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
   -H "Content-Type: application/json" \
   "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records" \
   -d '{
@@ -137,18 +137,18 @@ NAME="app.example.com"
 TYPE="A"
 CONTENT="198.51.100.4"
 
-EXISTING_ID=$(curl -sf -H "Authorization: Bearer $CF_API_TOKEN" \
+EXISTING_ID=$(curl -sf -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
   "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records?type=$TYPE&name=$NAME" \
   | jq -r '.result[0].id // empty')
 
 if [ -n "$EXISTING_ID" ]; then
   curl -sf -X PATCH \
-    -H "Authorization: Bearer $CF_API_TOKEN" -H "Content-Type: application/json" \
+    -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json" \
     "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records/$EXISTING_ID" \
     -d "{\"content\":\"$CONTENT\"}"
 else
   curl -sf -X POST \
-    -H "Authorization: Bearer $CF_API_TOKEN" -H "Content-Type: application/json" \
+    -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json" \
     "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records" \
     -d "{\"type\":\"$TYPE\",\"name\":\"$NAME\",\"content\":\"$CONTENT\",\"ttl\":1}"
 fi
@@ -162,7 +162,7 @@ For >5 mixed changes, use the batch endpoint — single atomic call, all-or-noth
 
 ```bash
 curl -sf -X POST \
-  -H "Authorization: Bearer $CF_API_TOKEN" \
+  -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
   -H "Content-Type: application/json" \
   "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records/batch" \
   -d '{
@@ -255,12 +255,12 @@ For zone migrations:
 
 ```bash
 # Export: returns BIND zone file as plain text
-curl -sf -H "Authorization: Bearer $CF_API_TOKEN" \
+curl -sf -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
   "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records/export" \
   -o example.com.zone
 
 # Import: multipart upload
-curl -sf -X POST -H "Authorization: Bearer $CF_API_TOKEN" \
+curl -sf -X POST -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
   -F "file=@example.com.zone" \
   -F "proxied=false" \
   "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records/import"
@@ -279,7 +279,7 @@ Use export for backup before risky changes; use import only for fresh-zone migra
 ```bash
 # Enable — response body contains the DS record fields
 curl -sf -X PATCH \
-  -H "Authorization: Bearer $CF_API_TOKEN" -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json" \
   "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dnssec" \
   -d '{"status":"active"}' \
   | jq '.result | {ds, key_tag, algorithm, digest_type, digest, status}'
