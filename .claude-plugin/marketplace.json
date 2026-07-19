@@ -177,11 +177,12 @@
         "./plugins/cloud-platform-skills/skills/gcp-iam",
         "./plugins/cloud-platform-skills/skills/aws-cost-investigation",
         "./plugins/cloud-platform-skills/skills/cloudflare-access-mcp",
+        "./plugins/cloud-platform-skills/skills/cloudflare-analytics",
         "./plugins/cloud-platform-skills/skills/cloudflare-cf-cli",
         "./plugins/cloud-platform-skills/skills/cloudflare-dns-zones",
         "./plugins/cloud-platform-skills/skills/cloudflare-workers"
       ],
-      "description": "Cloud provider operations: GCP IAM inheritance and impersonation; AWS cost investigation (Cost Explorer + CUR, anomaly detection, Savings Plans vs RIs); and Cloudflare platform — DNS zones (REST), Workers configuration, the cf unified CLI (preview), and Zero Trust Access for remote MCP servers. Ships stdlib validators.",
+      "description": "Cloud provider operations: GCP IAM inheritance and impersonation; AWS cost investigation (Cost Explorer + CUR, anomaly detection, Savings Plans vs RIs); and Cloudflare platform — DNS zones (REST), Workers configuration, the cf unified CLI (preview), Zero Trust Access for remote MCP servers, and traffic analytics via the GraphQL Analytics API (per-hostname breakdowns, dataset limits, sampling). Ships stdlib validators.",
       "version": "0.1.0",
       "author": {
         "name": "Stanislav Serebrennikov",
@@ -203,7 +204,9 @@
         "cf-cli",
         "access",
         "zero-trust",
-        "mcp"
+        "mcp",
+        "analytics",
+        "graphql"
       ],
       "category": "devops"
     },

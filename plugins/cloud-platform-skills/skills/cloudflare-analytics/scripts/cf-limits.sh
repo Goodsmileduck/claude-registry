@@ -45,10 +45,10 @@ jq -r '
            elif . % 3600  == 0 then "\(./3600)h"
            else "\(.)s" end;
   .data.viewer.zones[0].settings
-  | (["DATASET","ENABLED","MAX_WINDOW","RETENTION","MAX_ROWS"] | @tsv),
+  | (["DATASET","ENABLED","MAX_WINDOW","RETENTION","MAX_ROWS","MAX_FIELDS"] | @tsv),
     (to_entries[] | [
       .key, (.value.enabled|tostring),
       (.value.maxDuration|dur), (.value.notOlderThan|dur),
-      (.value.maxPageSize|tostring)
+      (.value.maxPageSize|tostring), (.value.maxNumberOfFields|tostring)
     ] | @tsv)
 ' <<<"$resp" | column -t

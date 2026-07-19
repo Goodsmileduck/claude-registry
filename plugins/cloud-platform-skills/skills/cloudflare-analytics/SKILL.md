@@ -1,6 +1,6 @@
 ---
 name: cloudflare-analytics
-description: Queries Cloudflare traffic and usage analytics via the GraphQL Analytics API — per-hostname request/visitor/bandwidth breakdowns, status-code and cache analysis, Workers and Pages Functions invocation metrics, Web Analytics/RUM. Use when asked how much traffic a site, app, or subdomain gets, which services are actually used, or when writing or debugging a Cloudflare GraphQL query, or when such a query returns errors or empty results.
+description: Queries Cloudflare traffic and usage analytics via the GraphQL Analytics API — per-hostname request/visitor/bandwidth breakdowns, cached-vs-uncached request counts, Workers and Pages Functions invocation metrics, Web Analytics/RUM. Use when asked how much traffic a site, app, or subdomain gets, which services are actually used, or when writing or debugging a Cloudflare GraphQL query, or when such a query returns errors or empty results.
 ---
 
 # Cloudflare Analytics
