@@ -1,0 +1,17 @@
+[
+  {
+    "query": "How much traffic did each of my subdomains on example.com get yesterday?",
+    "files": [],
+    "expected_behavior": "Runs scripts/cf-limits.sh first (or explains why probing matters), then scripts/cf-host-traffic.sh with the zone name and date. Reports per-hostname requests/visits/bandwidth, labels rows with sampleInterval > 1 as estimates, excludes :port/trailing-dot scanner noise, and does not treat VISITS=0 on API hosts as an anomaly. Never asks the user to paste the API token into the chat."
+  },
+  {
+    "query": "Give me per-app traffic for the last 30 days broken down by subdomain.",
+    "files": [],
+    "expected_behavior": "Probes dataset limits and, when notOlderThan for httpRequestsAdaptiveGroups is shorter than 30 days (typical on non-Enterprise plans), states plainly that per-hostname history beyond retention does not exist and cannot be reconstructed. Offers zone-wide httpRequests1dGroups totals as the long-range alternative while naming the difference (no hostname dimension). Does not silently substitute one for the other."
+  },
+  {
+    "query": "My Cloudflare GraphQL query returns HTTP 200 but I get no data — is my token broken?",
+    "files": [],
+    "expected_behavior": "Checks body.errors before concluding anything, since errors arrive with HTTP 200. Explains that missing token scopes produce 403 rather than empty data, and diagnoses empty results against the likely causes: window outside notOlderThan retention, RUM beacon not installed/CSP-blocked, or Worker missing the [observability] block."
+  }
+]
