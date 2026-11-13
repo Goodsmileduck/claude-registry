@@ -25,15 +25,6 @@ the underlying MCP tools and XML mechanics those diagrams build on.
 
 The official draw.io MCP (Model Context Protocol) server that enables LLMs to open and create diagrams in the draw.io editor.
 
-## Repository Structure
-
-- **`mcp-app-server/`** — MCP App server (renders diagrams inline in chat via iframe). Hosted at `https://mcp.draw.io/mcp`. Can also be self-hosted via Node.js or Cloudflare Workers.
-- **`mcp-tool-server/`** — Original MCP tool server (stdio-based, opens browser). Published as `@drawio/mcp` on npm.
-- **`project-instructions/`** — Claude Project instructions (no MCP required, no install).
-- **`skill-cli/`** — Claude Code skill (generates native `.drawio` files, opens in desktop app). No MCP required.
-
-Each subdirectory has its own `CLAUDE.md` with implementation details.
-
 ## MCP App Server Tool
 
 ### `create_diagram`
@@ -219,26 +210,6 @@ For the XML Schema Definition (XSD) for validating `.drawio` files: https://www.
 When generating draw.io XML, the output **must** be well-formed XML:
 - **NEVER use double hyphens (`--`) inside XML comments.** `--` is illegal inside `<!-- -->` per the XML spec and causes parse errors. Use single hyphens or rephrase (e.g. `<!-- Order 1 to OrderItem -->` not `<!-- Order 1 --- OrderItem -->`).
 - Escape special characters in attribute values (`&amp;`, `&lt;`, `&gt;`, `&quot;`).
-
-## Coding Conventions
-
-- **Allman brace style**: Opening braces go on their own line for all control structures, functions, objects, and callbacks.
-
-```js
-function example()
-{
-  if (condition)
-  {
-    doSomething();
-  }
-  else
-  {
-    doOther();
-  }
-}
-```
-
-- Prefer `function()` expressions over arrow functions for callbacks.
 
 ## Troubleshooting
 

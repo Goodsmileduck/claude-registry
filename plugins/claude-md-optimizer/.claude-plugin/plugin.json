@@ -1,6 +1,6 @@
 {
   "name": "claude-md-optimizer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Analyzes and optimizes CLAUDE.md files following Anthropic's official best practices. Use when reviewing existing CLAUDE.md for improvements, or when user mentions CLAUDE.md is too long or ineffective.",
   "author": {
     "name": "Stanislav Serebrennikov",

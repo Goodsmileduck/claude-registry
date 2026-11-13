@@ -103,20 +103,20 @@ LINK=".claude/skills/<name>"
 test -d "$TARGET" || { echo "Source missing: $TARGET"; exit 1; }
 if [ -L "$LINK" ]; then
   current=$(readlink "$LINK")
-  [ "$current" = "$TARGET" ] && { echo "$<name> already linked — skip"; }
+  [ "$current" = "$TARGET" ] && { echo "<name> already linked — skip"; }
   [ "$current" != "$TARGET" ] && { echo "$LINK points elsewhere — resolve manually"; exit 1; }
 elif [ -e "$LINK" ]; then
   echo "$LINK exists and is not a symlink — refusing"; exit 1
 else
-  ln -s "$TARGET" "$LINK" && echo "Linked $<name>"
+  ln -s "$TARGET" "$LINK" && echo "Linked <name>"
 fi
 ```
 
-**`npx-skills`** — fetch into the project's skills directory (NOT global):
+**`npx-skills`** — install into the project (no `-g`), then link it where Claude Code looks. `npx skills add` writes to `./.agents/skills/<name>`, which Claude Code does not read:
 
 ```bash
-# `npx skills add` defaults to project scope (./.claude/skills/) when run without -g
 npx skills add "<repo-from-manifest>"
+ln -s ../../.agents/skills/<name> .claude/skills/<name>
 ```
 
 `npx skills add` copies files; updates require `npx skills update` later. Mention this when installing.
@@ -153,11 +153,7 @@ This is the only modification this skill makes outside the project directory.
 ## Anti-patterns
 
 - ❌ Installing a skill not in the manifest without first offering to add it.
-- ❌ Linking into `~/.claude/skills/` from this skill — global is the user's explicit choice.
-- ❌ Running `npx skills add -g` here — that's global, not project-scoped.
 - ❌ Attempting `/plugin install` via Bash — Claude can't invoke slash commands; print the instruction.
-- ❌ Overwriting an existing symlink or directory without confirming.
-- ❌ Forgetting to remind the user to restart the session.
 - ❌ Recommending skills based on Claude's general knowledge instead of the manifest — that's `claude-automation-recommender`'s job.
 - ❌ Copying skill content into the project instead of symlinking when source is `local-symlink` — defeats the live-edit benefit.
 
@@ -166,4 +162,3 @@ This is the only modification this skill makes outside the project directory.
 - `claude-automation-recommender` (claude-code-setup plugin): broader codebase-aware advisor across hooks, subagents, MCP, plugins, and skills. Read-only. Useful BEFORE this skill — surfaces new ideas; you then add the good ones to the manifest.
 - `find-skills`: discovers skills on the public registry. Use to find candidates worth adding to the manifest.
 - `skill-creator`: for authoring new skills (which then get added to the manifest as `local-symlink`).
-- `devops-skill-link`: deprecated — this skill subsumes its job. Safe to delete.

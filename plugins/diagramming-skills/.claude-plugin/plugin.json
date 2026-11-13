@@ -1,6 +1,6 @@
 {
   "name": "diagramming-skills",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "draw.io diagram authoring: native .drawio file generation, the draw.io MCP servers, and an architecture/HLA method for infrastructure & Kubernetes topology (semantic edge routing, comb-bus/ladder/rail layouts, icon and color conventions). Ships a reusable Python generator.",
   "author": {
     "name": "Stanislav Serebrennikov",
