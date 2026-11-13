@@ -71,7 +71,7 @@ Either:
 
 ### Keep It Concise
 
-CLAUDE.md is loaded into context every time. Total limit: **40k tokens** (CLAUDE.md + all @referenced files combined).
+CLAUDE.md and its @imports load into every session, so their size is a cost on every turn.
 
 ```markdown
 # BAD: Verbose explanation
@@ -121,49 +121,25 @@ npm test        # Run tests in watch mode
 npm run build   # Production build
 ```
 
-### Use Emphasis for Critical Rules
+### State Must-Follow Rules Plainly, With the Reason
 
-For must-follow instructions, use emphasis markers:
+Current models follow CLAUDE.md closely; capitalised IMPORTANT / YOU MUST / ALWAYS markers make them over-apply a rule.
+Write the rule and its reason:
 
 ```markdown
-IMPORTANT: Never commit directly to main.
-YOU MUST run tests before pushing.
-ALWAYS use logger utility, never console.log.
+Use the logger utility, not console.log: console output is stripped in production.
 ```
+
+Reserve emphasis for one rule you have actually seen ignored. Flag emphasis clusters without a reason as an issue.
 
 ## Output Format
 
 When optimizing, provide:
 
 1. **Summary** - Brief assessment (1-2 sentences)
-2. **Score** - X/10 rating with breakdown
-3. **Critical Issues** - Must-fix problems
-4. **Recommendations** - Prioritized improvements
-5. **Optimized CLAUDE.md** - The improved file (if applying changes)
-
-## Example Assessment
-
-```
-## CLAUDE.md Optimization Report
-
-**Summary:** Good foundation but overly verbose. Contains generic advice that adds token cost without value.
-
-**Score:** 6/10
-- Structure: 8/10 (well-organized sections)
-- Conciseness: 4/10 (too verbose, 2000+ lines)
-- Specificity: 5/10 (mix of specific and generic)
-- Security: 9/10 (no sensitive data found)
-
-**Critical Issues:**
-1. File exceeds 500 lines - should use modular rules files
-2. Contains generic "best practices" not specific to project
-
-**Recommendations:**
-1. [HIGH] Move detailed rules to .claude/rules/*.md files
-2. [HIGH] Remove generic coding advice Claude already knows
-3. [MED] Add missing quick-start commands section
-4. [LOW] Consolidate duplicate information in docs/
-```
+2. **Critical Issues** - Must-fix problems
+3. **Recommendations** - Prioritized improvements
+4. **Optimized CLAUDE.md** - The improved file (if applying changes)
 
 ## Resources
 

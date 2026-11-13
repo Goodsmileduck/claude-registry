@@ -16,7 +16,7 @@
         "./plugins/claude-md-optimizer/skills/claude-md-optimizer"
       ],
       "description": "Analyzes and optimizes CLAUDE.md files following Anthropic's official best practices. Use when reviewing existing CLAUDE.md for improvements, or when user mentions CLAUDE.md is too long or ineffective.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": {
         "name": "Stanislav Serebrennikov",
         "url": "https://github.com/Goodsmileduck"
@@ -220,7 +220,7 @@
         "./plugins/diagramming-skills/skills/drawio-diagramming"
       ],
       "description": "draw.io diagram authoring: native .drawio file generation, the draw.io MCP servers, and an architecture/HLA method for infrastructure & Kubernetes topology (semantic edge routing, comb-bus/ladder/rail layouts, icon and color conventions). Ships a reusable Python generator.",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "author": {
         "name": "Stanislav Serebrennikov",
         "url": "https://github.com/Goodsmileduck"
@@ -306,7 +306,7 @@
         "./plugins/setup-project-skills/skills/setup-project-skills"
       ],
       "description": "Installs skills from a user-curated manifest (~/.claude/skill-manifest.json) into the current project's .claude/skills/ — symlinks local skills, runs `npx skills add` for third-party ones, and advises `/plugin install` for native Claude plugins. Optionally scans the project for trigger files and pre-selects recommended matches. Ships a starter manifest as skill-manifest.example.json.",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "author": {
         "name": "Stanislav Serebrennikov",
         "url": "https://github.com/Goodsmileduck"
